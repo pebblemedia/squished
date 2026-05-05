@@ -1,10 +1,11 @@
 export type FileStatus = "queued" | "processing" | "done" | "error";
 
-export type FileKind = "image" | "audio" | "other";
+export type FileKind = "image" | "audio" | "video" | "other";
 
 export type TargetFormat =
   | "jpeg" | "png" | "webp"
   | "mp3" | "m4a" | "wav" | "ogg"
+  | "mp4" | "webm"
   | "original";
 
 export interface QueueItem {
@@ -20,8 +21,8 @@ export interface QueueItem {
   outputName?: string;
   outputSize?: number;
   targetFormat: TargetFormat;
-  quality: number; // 0..1 (images)
-  bitrate?: number; // kbps (audio)
+  quality: number; // 0..1 (images) or CRF-mapped (video)
+  bitrate?: number; // kbps (audio) or video bitrate
   thumbnail?: string;
 }
 
@@ -29,7 +30,9 @@ export const isImage = (file: File) => file.type.startsWith("image/");
 
 export function detectKind(file: File): FileKind {
   if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
   if (file.type.startsWith("audio/")) return "audio";
+  if (/\.(mp4|mov|webm|mkv|avi|m4v)$/i.test(file.name)) return "video";
   if (/\.(mp3|wav|m4a|aac|ogg|flac|opus)$/i.test(file.name)) return "audio";
   return "other";
 }

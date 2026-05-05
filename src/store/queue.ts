@@ -3,6 +3,7 @@ import type { QueueItem, TargetFormat } from "@/lib/files";
 import { detectKind } from "@/lib/files";
 import { compressImage, makeThumbnail } from "@/lib/processors/image";
 import { compressAudio } from "@/lib/processors/audio";
+import { compressVideo } from "@/lib/processors/video";
 
 interface QueueState {
   items: QueueItem[];
@@ -91,8 +92,10 @@ export const useQueue = create<QueueState>((set, get) => ({
         result = await compressImage(item, onProgress);
       } else if (item.kind === "audio") {
         result = await compressAudio(item, onProgress);
+      } else if (item.kind === "video") {
+        result = await compressVideo(item, onProgress);
       } else {
-        throw new Error("Unsupported file type. Images & audio supported; PDF and video coming soon.");
+        throw new Error("Unsupported file type. Images, audio & video supported; PDFs coming soon.");
       }
 
       set({

@@ -1,4 +1,4 @@
-import { Download, Loader2, Trash2, CheckCircle2, AlertTriangle, FileImage, Music } from "lucide-react";
+import { Download, Loader2, Trash2, CheckCircle2, AlertTriangle, FileImage, Music, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -33,6 +33,7 @@ export function FileRow({ id }: { id: string }) {
   };
 
   const isAudio = item.kind === "audio";
+  const isVideo = item.kind === "video";
 
   return (
     <div className="rounded-xl border bg-card p-3 shadow-soft sm:p-4">
@@ -42,6 +43,8 @@ export function FileRow({ id }: { id: string }) {
             <img src={item.thumbnail} alt="" className="size-full object-cover" />
           ) : isAudio ? (
             <Music className="size-6 text-muted-foreground" />
+          ) : isVideo ? (
+            <Film className="size-6 text-muted-foreground" />
           ) : (
             <FileImage className="size-6 text-muted-foreground" />
           )}
@@ -87,7 +90,7 @@ export function FileRow({ id }: { id: string }) {
             <div className="mt-2 flex items-center gap-2">
               <Loader2 className="size-3.5 animate-spin text-primary" />
               <Progress value={item.progress} className="h-1.5 flex-1" />
-              {isAudio && item.progress < 20 && (
+              {(isAudio || isVideo) && item.progress < 15 && (
                 <span className="text-[10px] text-muted-foreground">loading engine…</span>
               )}
             </div>
@@ -120,6 +123,11 @@ export function FileRow({ id }: { id: string }) {
                 <SelectItem value="m4a">M4A (AAC)</SelectItem>
                 <SelectItem value="ogg">OGG</SelectItem>
                 <SelectItem value="wav">WAV</SelectItem>
+              </>
+            ) : isVideo ? (
+              <>
+                <SelectItem value="mp4">MP4 (H.264)</SelectItem>
+                <SelectItem value="webm">WebM (VP9)</SelectItem>
               </>
             ) : (
               <>
