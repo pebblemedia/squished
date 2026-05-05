@@ -1,11 +1,17 @@
 export type FileStatus = "queued" | "processing" | "done" | "error";
 
-export type TargetFormat = "jpeg" | "png" | "webp" | "original";
+export type FileKind = "image" | "audio" | "other";
+
+export type TargetFormat =
+  | "jpeg" | "png" | "webp"
+  | "mp3" | "m4a" | "wav" | "ogg"
+  | "original";
 
 export interface QueueItem {
   id: string;
   file: File;
   name: string;
+  kind: FileKind;
   originalSize: number;
   status: FileStatus;
   progress: number;
@@ -14,11 +20,19 @@ export interface QueueItem {
   outputName?: string;
   outputSize?: number;
   targetFormat: TargetFormat;
-  quality: number; // 0..1
+  quality: number; // 0..1 (images)
+  bitrate?: number; // kbps (audio)
   thumbnail?: string;
 }
 
 export const isImage = (file: File) => file.type.startsWith("image/");
+
+export function detectKind(file: File): FileKind {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("audio/")) return "audio";
+  if (/\.(mp3|wav|m4a|aac|ogg|flac|opus)$/i.test(file.name)) return "audio";
+  return "other";
+}
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
