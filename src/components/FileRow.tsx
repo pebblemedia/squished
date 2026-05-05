@@ -43,6 +43,8 @@ export function FileRow({ id }: { id: string }) {
             <img src={item.thumbnail} alt="" className="size-full object-cover" />
           ) : isAudio ? (
             <Music className="size-6 text-muted-foreground" />
+          ) : isVideo ? (
+            <Film className="size-6 text-muted-foreground" />
           ) : (
             <FileImage className="size-6 text-muted-foreground" />
           )}
