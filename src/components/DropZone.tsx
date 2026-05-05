@@ -4,9 +4,12 @@ import { cn } from "@/lib/utils";
 
 interface DropZoneProps {
   onFiles: (files: FileList | File[]) => void;
+  accept?: string;
+  hint?: string;
+  title?: string;
 }
 
-export function DropZone({ onFiles }: DropZoneProps) {
+export function DropZone({ onFiles, accept, hint, title }: DropZoneProps) {
   const [over, setOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +41,7 @@ export function DropZone({ onFiles }: DropZoneProps) {
         ref={inputRef}
         type="file"
         multiple
-        accept="image/*,audio/*,.mp3,.wav,.m4a,.ogg,.flac,.aac,.opus"
+        accept={accept ?? "image/*,audio/*,video/*,.mp3,.wav,.m4a,.ogg,.flac,.aac,.opus,.mp4,.webm,.mov,.mkv"}
         className="hidden"
         onChange={(e) => {
           if (e.target.files?.length) onFiles(e.target.files);
@@ -49,13 +52,13 @@ export function DropZone({ onFiles }: DropZoneProps) {
         <Upload className="size-7" strokeWidth={2.25} />
       </div>
       <h2 className="mt-5 font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-        Drop files here
+        {title ?? "Drop files here"}
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
         or <span className="font-medium text-foreground underline-offset-4 group-hover:underline">click to browse</span>
       </p>
       <p className="mt-6 text-xs text-muted-foreground">
-        Images & audio (MP3, WAV, M4A, OGG) — processed entirely in your browser
+        {hint ?? "Images, audio & video — processed entirely in your browser"}
       </p>
     </div>
   );
