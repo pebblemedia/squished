@@ -1,6 +1,6 @@
 import imageCompression from "browser-image-compression";
-import type { QueueItem, TargetFormat } from "./files";
-import { replaceExt } from "./files";
+import type { QueueItem, TargetFormat } from "../files";
+import { replaceExt } from "../files";
 
 const mimeFor: Record<Exclude<TargetFormat, "original">, string> = {
   jpeg: "image/jpeg",
