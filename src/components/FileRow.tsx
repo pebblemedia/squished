@@ -1,4 +1,4 @@
-import { Download, Loader2, Trash2, CheckCircle2, AlertTriangle, FileImage, Music } from "lucide-react";
+import { Download, Loader2, Trash2, CheckCircle2, AlertTriangle, FileImage, Music, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
