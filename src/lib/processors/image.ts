@@ -2,13 +2,13 @@ import imageCompression from "browser-image-compression";
 import type { QueueItem, TargetFormat } from "../files";
 import { replaceExt } from "../files";
 
-const mimeFor: Record<Exclude<TargetFormat, "original">, string> = {
+const mimeFor: Partial<Record<Exclude<TargetFormat, "original">, string>> = {
   jpeg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
 };
 
-const extFor: Record<Exclude<TargetFormat, "original">, string> = {
+const extFor: Partial<Record<Exclude<TargetFormat, "original">, string>> = {
   jpeg: "jpg",
   png: "png",
   webp: "webp",

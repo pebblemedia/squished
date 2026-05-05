@@ -75,12 +75,13 @@ export async function compressAudio(
     await ff.exec(args);
 
     const data = (await ff.readFile(outName)) as Uint8Array;
+    const buf = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
     const mime =
       target.ext === "mp3" ? "audio/mpeg"
       : target.ext === "m4a" ? "audio/mp4"
       : target.ext === "wav" ? "audio/wav"
       : "audio/ogg";
-    const blob = new Blob([data], { type: mime });
+    const blob = new Blob([buf], { type: mime });
 
     // cleanup
     try { await ff.deleteFile(inputName); } catch {}
