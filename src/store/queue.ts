@@ -26,7 +26,7 @@ const newId = () =>
 export const useQueue = create<QueueState>((set, get) => ({
   items: [],
 
-  addFiles: (files) => {
+  addFiles: (files, defaults) => {
     const list = Array.from(files);
     const newItems: QueueItem[] = list.map((file) => {
       const kind = detectKind(file);
@@ -38,7 +38,7 @@ export const useQueue = create<QueueState>((set, get) => ({
         originalSize: file.size,
         status: "queued",
         progress: 0,
-        targetFormat: "original",
+        targetFormat: defaults?.targetFormat ?? "original",
         quality: 0.75,
         bitrate: kind === "audio" ? 128 : undefined,
       };
