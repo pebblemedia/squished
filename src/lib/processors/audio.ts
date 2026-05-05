@@ -1,9 +1,9 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { fetchFile } from "@ffmpeg/util";
 import type { QueueItem } from "../files";
 import { replaceExt } from "../files";
 
-// Single-threaded UMD build — self-hosted from /public/wasm/.
+// Single-threaded ESM build — self-hosted from /public/wasm/.
 const CORE_JS = "/wasm/ffmpeg-core.js";
 const CORE_WASM = "/wasm/ffmpeg-core.wasm";
 
@@ -58,7 +58,10 @@ export async function getFFmpeg(onLoadProgress?: (p: number) => void): Promise<F
     ff.on("log", ({ message }) => console.log("[ffmpeg]", message));
     onLoadProgress?.(2);
 
-    const coreURL = await toBlobURL(CORE_JS, "text/javascript");
+    // Same-origin URLs are safer here than blob URLs: the ffmpeg module worker
+    // imports the core via dynamic import(), and blob module imports can fail
+    // under deployed CSP/storage rules even when the core file itself is valid.
+    const coreURL = CORE_JS;
     onLoadProgress?.(5);
 
     // wasm is the big one (~31 MB) — track real progress 5 → 90.
