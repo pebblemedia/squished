@@ -38,7 +38,7 @@ export function DropZone({ onFiles }: DropZoneProps) {
         ref={inputRef}
         type="file"
         multiple
-        accept="image/*"
+        accept="image/*,audio/*,.mp3,.wav,.m4a,.ogg,.flac,.aac,.opus"
         className="hidden"
         onChange={(e) => {
           if (e.target.files?.length) onFiles(e.target.files);
@@ -55,7 +55,7 @@ export function DropZone({ onFiles }: DropZoneProps) {
         or <span className="font-medium text-foreground underline-offset-4 group-hover:underline">click to browse</span>
       </p>
       <p className="mt-6 text-xs text-muted-foreground">
-        Images: JPG · PNG · WebP — processed entirely in your browser
+        Images & audio (MP3, WAV, M4A, OGG) — processed entirely in your browser
       </p>
     </div>
   );
