@@ -7,7 +7,7 @@ import { compressVideo } from "@/lib/processors/video";
 
 interface QueueState {
   items: QueueItem[];
-  addFiles: (files: FileList | File[]) => void;
+  addFiles: (files: FileList | File[], defaults?: { targetFormat?: TargetFormat }) => void;
   remove: (id: string) => void;
   clear: () => void;
   updateOptions: (
