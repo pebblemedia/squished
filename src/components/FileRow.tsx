@@ -124,6 +124,11 @@ export function FileRow({ id }: { id: string }) {
                 <SelectItem value="ogg">OGG</SelectItem>
                 <SelectItem value="wav">WAV</SelectItem>
               </>
+            ) : isVideo ? (
+              <>
+                <SelectItem value="mp4">MP4 (H.264)</SelectItem>
+                <SelectItem value="webm">WebM (VP9)</SelectItem>
+              </>
             ) : (
               <>
                 <SelectItem value="jpeg">JPEG</SelectItem>
