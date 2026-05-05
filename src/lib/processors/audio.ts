@@ -4,12 +4,17 @@ import type { QueueItem } from "../files";
 import { replaceExt } from "../files";
 
 // Single-threaded UMD build — self-hosted from /public/wasm/.
-// (unpkg.com is slow / sometimes throttles the 31 MB wasm download.)
 const CORE_JS = "/wasm/ffmpeg-core.js";
 const CORE_WASM = "/wasm/ffmpeg-core.wasm";
 
 let ffmpegInstance: FFmpeg | null = null;
 let loadingPromise: Promise<FFmpeg> | null = null;
+
+function describeError(err: unknown): string {
+  if (err instanceof Error) return err.message || err.name || "Error";
+  if (typeof err === "string") return err;
+  try { return JSON.stringify(err); } catch { return String(err); }
+}
 
 export function isAudio(file: File) {
   if (file.type.startsWith("audio/")) return true;
