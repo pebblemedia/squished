@@ -1,11 +1,14 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile } from "@ffmpeg/util";
+import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import type { QueueItem } from "../files";
 import { replaceExt } from "../files";
 
-// Single-threaded ESM build — self-hosted from /public/wasm/.
-const CORE_JS = "/wasm/ffmpeg-core.js";
-const CORE_WASM = "/wasm/ffmpeg-core.wasm";
+// Single-threaded ESM build — served from CDN (the wasm is ~32 MB and
+// Lovable's hosting layer times out (524) serving large static assets).
+const CORE_VERSION = "0.12.10";
+const CORE_BASE = `https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/esm`;
+const CORE_JS = `${CORE_BASE}/ffmpeg-core.js`;
+const CORE_WASM = `${CORE_BASE}/ffmpeg-core.wasm`;
 
 let ffmpegInstance: FFmpeg | null = null;
 let loadingPromise: Promise<FFmpeg> | null = null;
@@ -58,10 +61,9 @@ export async function getFFmpeg(onLoadProgress?: (p: number) => void): Promise<F
     ff.on("log", ({ message }) => console.log("[ffmpeg]", message));
     onLoadProgress?.(2);
 
-    // Same-origin URLs are safer here than blob URLs: the ffmpeg module worker
-    // imports the core via dynamic import(), and blob module imports can fail
-    // under deployed CSP/storage rules even when the core file itself is valid.
-    const coreURL = CORE_JS;
+    // Cross-origin module worker imports are blocked, so wrap the core JS in
+    // a same-origin blob URL.
+    const coreURL = await toBlobURL(CORE_JS, "text/javascript");
     onLoadProgress?.(5);
 
     // wasm is the big one (~31 MB) — track real progress 5 → 90.
