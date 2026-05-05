@@ -1,14 +1,18 @@
 import { create } from "zustand";
 import type { QueueItem, TargetFormat } from "@/lib/files";
-import { isImage } from "@/lib/files";
+import { detectKind } from "@/lib/files";
 import { compressImage, makeThumbnail } from "@/lib/processors/image";
+import { compressAudio } from "@/lib/processors/audio";
 
 interface QueueState {
   items: QueueItem[];
   addFiles: (files: FileList | File[]) => void;
   remove: (id: string) => void;
   clear: () => void;
-  updateOptions: (id: string, patch: Partial<Pick<QueueItem, "targetFormat" | "quality">>) => void;
+  updateOptions: (
+    id: string,
+    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate">>
+  ) => void;
   process: (id: string) => Promise<void>;
   processAll: () => Promise<void>;
 }
@@ -23,27 +27,33 @@ export const useQueue = create<QueueState>((set, get) => ({
 
   addFiles: (files) => {
     const list = Array.from(files);
-    const newItems: QueueItem[] = list.map((file) => ({
-      id: newId(),
-      file,
-      name: file.name,
-      originalSize: file.size,
-      status: "queued",
-      progress: 0,
-      targetFormat: "original",
-      quality: 0.75,
-    }));
+    const newItems: QueueItem[] = list.map((file) => {
+      const kind = detectKind(file);
+      return {
+        id: newId(),
+        file,
+        name: file.name,
+        kind,
+        originalSize: file.size,
+        status: "queued",
+        progress: 0,
+        targetFormat: "original",
+        quality: 0.75,
+        bitrate: kind === "audio" ? 128 : undefined,
+      };
+    });
     set({ items: [...get().items, ...newItems] });
 
-    // generate thumbnails async
+    // generate thumbnails async (images only)
     newItems.forEach(async (it) => {
+      if (it.kind !== "image") return;
       const thumb = await makeThumbnail(it.file);
       set({
         items: get().items.map((x) => (x.id === it.id ? { ...x, thumbnail: thumb } : x)),
       });
     });
 
-    // auto-process
+    // auto-process sequentially for audio (ffmpeg single instance), parallel-ish for images
     newItems.forEach((it) => void get().process(it.id));
   },
 
@@ -70,15 +80,20 @@ export const useQueue = create<QueueState>((set, get) => ({
     });
 
     try {
-      if (!isImage(item.file)) {
-        throw new Error("Only image files are supported in this version. PDF, audio & video coming soon.");
-      }
-
-      const { blob, name } = await compressImage(item, (p) => {
+      const onProgress = (p: number) => {
         set({
           items: get().items.map((x) => (x.id === id ? { ...x, progress: p } : x)),
         });
-      });
+      };
+
+      let result: { blob: Blob; name: string };
+      if (item.kind === "image") {
+        result = await compressImage(item, onProgress);
+      } else if (item.kind === "audio") {
+        result = await compressAudio(item, onProgress);
+      } else {
+        throw new Error("Unsupported file type. Images & audio supported; PDF and video coming soon.");
+      }
 
       set({
         items: get().items.map((x) =>
@@ -87,9 +102,9 @@ export const useQueue = create<QueueState>((set, get) => ({
                 ...x,
                 status: "done",
                 progress: 100,
-                output: blob,
-                outputName: name,
-                outputSize: blob.size,
+                output: result.blob,
+                outputName: result.name,
+                outputSize: result.blob.size,
               }
             : x
         ),
