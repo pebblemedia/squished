@@ -155,7 +155,11 @@ export function FileRow({ id }: { id: string }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="64">64 kbps (smallest)</SelectItem>
+                <SelectItem value="16">16 kbps (tiny, mono speech)</SelectItem>
+                <SelectItem value="24">24 kbps</SelectItem>
+                <SelectItem value="32">32 kbps</SelectItem>
+                <SelectItem value="48">48 kbps</SelectItem>
+                <SelectItem value="64">64 kbps</SelectItem>
                 <SelectItem value="96">96 kbps</SelectItem>
                 <SelectItem value="128">128 kbps (recommended)</SelectItem>
                 <SelectItem value="192">192 kbps</SelectItem>
