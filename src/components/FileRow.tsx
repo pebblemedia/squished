@@ -90,7 +90,7 @@ export function FileRow({ id }: { id: string }) {
             <div className="mt-2 flex items-center gap-2">
               <Loader2 className="size-3.5 animate-spin text-primary" />
               <Progress value={item.progress} className="h-1.5 flex-1" />
-              {isAudio && item.progress < 20 && (
+              {(isAudio || isVideo) && item.progress < 15 && (
                 <span className="text-[10px] text-muted-foreground">loading engine…</span>
               )}
             </div>
