@@ -134,13 +134,27 @@ export async function compressAudio(
       : target.ext === "m4a" ? "audio/mp4"
       : target.ext === "wav" ? "audio/wav"
       : "audio/ogg";
-    const blob = new Blob([buf], { type: mime });
+    let blob = new Blob([buf], { type: mime });
+    let outputName = replaceExt(item.name, target.ext);
 
     // cleanup
     try { await ff.deleteFile(inputName); } catch {}
     try { await ff.deleteFile(outName); } catch {}
 
-    return { blob, name: replaceExt(item.name, target.ext) };
+    // If re-encoding made the file bigger (source was already at a lower
+    // bitrate than the chosen target), keep the original — it's smaller and
+    // hasn't been re-compressed lossily.
+    const sourceExt = (item.name.split(".").pop() ?? "").toLowerCase();
+    const sameFormat =
+      (item.targetFormat === "original" && sourceExt === target.ext) ||
+      item.targetFormat === sourceExt;
+    if (sameFormat && blob.size > item.file.size) {
+      console.log("[ffmpeg] output larger than source, keeping original");
+      blob = new Blob([await item.file.arrayBuffer()], { type: item.file.type || mime });
+      outputName = item.name;
+    }
+
+    return { blob, name: outputName };
   } finally {
     ff.off("progress", progressHandler);
   }
