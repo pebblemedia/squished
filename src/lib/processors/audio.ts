@@ -79,9 +79,7 @@ export async function getFFmpeg(onLoadProgress?: (p: number) => void): Promise<F
   } catch (err) {
     loadingPromise = null;
     console.error("[ffmpeg] load failed:", err);
-    throw new Error(
-      `Couldn't load audio engine: ${err instanceof Error ? err.message : "unknown error"}`
-    );
+    throw new Error(`Couldn't load audio engine: ${describeError(err)}`);
   }
 }
 
