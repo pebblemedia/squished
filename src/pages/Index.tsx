@@ -1,10 +1,15 @@
 import JSZip from "jszip";
-import { Download, Trash2, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Download, Trash2, ArrowRight } from "lucide-react";
 import { DropZone } from "@/components/DropZone";
 import { FileRow } from "@/components/FileRow";
 import { Button } from "@/components/ui/button";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
+import { Seo, canonicalFor } from "@/components/seo/Seo";
 import { useQueue } from "@/store/queue";
 import { formatBytes } from "@/lib/files";
+import { POPULAR_SLUGS, getTool } from "@/lib/tools";
 
 const Index = () => {
   const items = useQueue((s) => s.items);
@@ -16,6 +21,10 @@ const Index = () => {
   const doneItems = items.filter((i) => i.status === "done");
   const savedPct =
     totalIn > 0 && totalOut > 0 ? Math.round((1 - totalOut / totalIn) * 100) : 0;
+
+  const popular = POPULAR_SLUGS.map(getTool).filter(
+    (t): t is NonNullable<typeof t> => !!t
+  );
 
   const downloadZip = async () => {
     if (doneItems.length === 0) return;
@@ -38,22 +47,20 @@ const Index = () => {
 
   return (
     <div className="relative min-h-screen">
+      <Seo
+        title="Squished — Compress & Convert Files in Your Browser, Free"
+        description="Compress and convert images, audio, and video locally in your browser. Free, private, no upload. Supports MP3, MP4, JPG, PNG, WAV, WebP and more."
+        canonical={canonicalFor("/")}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Squished",
+          url: canonicalFor("/"),
+        }}
+      />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[600px] bg-gradient-hero" />
 
-      <header className="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-5 py-5 sm:py-6">
-        <a href="/" className="flex items-center gap-2">
-          <span className="grid size-8 place-items-center rounded-lg bg-foreground text-background">
-            <Sparkles className="size-4" strokeWidth={2.5} />
-          </span>
-          <span className="font-display text-xl font-bold tracking-tight">Squished</span>
-        </a>
-        <a
-          href="#privacy"
-          className="text-xs font-medium text-muted-foreground hover:text-foreground"
-        >
-          100% private · runs in your browser
-        </a>
-      </header>
+      <SiteHeader />
 
       <main className="relative z-10 mx-auto max-w-3xl px-5 pb-24">
         <section className="pt-6 text-center sm:pt-12">
@@ -68,7 +75,7 @@ const Index = () => {
             </span>
           </h1>
           <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground sm:text-base">
-            Drop images and shrink them on your device. No accounts, no uploads, no waiting.
+            Drop images, audio, or video and shrink them on your device. No accounts, no uploads, no waiting.
           </p>
         </section>
 
@@ -122,7 +129,28 @@ const Index = () => {
           </section>
         )}
 
-        <section id="privacy" className="mt-20 rounded-2xl border bg-card p-6 sm:p-8">
+        <section className="mt-20">
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">Popular tools</h2>
+            <Link to="/tools" className="text-xs font-medium text-muted-foreground hover:text-foreground">
+              View all →
+            </Link>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {popular.map((t) => (
+              <Link
+                key={t.slug}
+                to={`/${t.slug}`}
+                className="group flex items-center justify-between rounded-lg border bg-card px-3 py-2.5 text-sm transition-colors hover:border-primary"
+              >
+                <span className="font-medium">{t.label}</span>
+                <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section id="privacy" className="mt-16 rounded-2xl border bg-card p-6 sm:p-8">
           <h2 className="font-display text-xl font-semibold">Why in-browser?</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Squished runs entirely on your device using WebAssembly. Your files never touch
@@ -146,12 +174,7 @@ const Index = () => {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} Squished</span>
-          <span>Built with WebAssembly · Files never leave your device</span>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 };
