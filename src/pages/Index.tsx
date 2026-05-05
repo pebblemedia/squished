@@ -29,7 +29,7 @@ const Index = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `squish-${Date.now()}.zip`;
+    a.download = `squished-${Date.now()}.zip`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -45,7 +45,7 @@ const Index = () => {
           <span className="grid size-8 place-items-center rounded-lg bg-foreground text-background">
             <Sparkles className="size-4" strokeWidth={2.5} />
           </span>
-          <span className="font-display text-xl font-bold tracking-tight">Squish</span>
+          <span className="font-display text-xl font-bold tracking-tight">Squished</span>
         </a>
         <a
           href="#privacy"
@@ -125,7 +125,7 @@ const Index = () => {
         <section id="privacy" className="mt-20 rounded-2xl border bg-card p-6 sm:p-8">
           <h2 className="font-display text-xl font-semibold">Why in-browser?</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Squish runs entirely on your device using WebAssembly. Your files never touch
+            Squished runs entirely on your device using WebAssembly. Your files never touch
             our servers — we couldn't see them if we tried. That means it's faster, free,
             and private by default.
           </p>
@@ -148,7 +148,7 @@ const Index = () => {
 
       <footer className="relative z-10 border-t">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-5 py-6 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} Squish</span>
+          <span>© {new Date().getFullYear()} Squished</span>
           <span>Built with WebAssembly · Files never leave your device</span>
         </div>
       </footer>
