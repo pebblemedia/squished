@@ -1,99 +1,114 @@
+## Goal
 
-# Squish — Browser-based File Compressor & Converter
+Mirror CloudConvert's SEO playbook: a dedicated, indexable landing page for every common task (e.g. "Compress MP3", "Convert PNG to JPG", "Compress MP4"). Each page targets a specific keyword, ranks on its own, and funnels users into the existing in-browser Squished tool — pre-configured for that task.
 
-A clean, utility-first site (TinyPNG-style) that compresses and converts files entirely in the user's browser. No uploads to a server for processing — files never leave the device. Optional accounts let users keep a history of their conversions.
+## Approach
 
-## Core principles
+Generate pages programmatically from a single config so we don't hand-write 50+ files. Each page:
 
-- **Privacy by default**: all processing runs client-side in the browser via WebAssembly libraries. Files are never uploaded for conversion.
-- **Drop-and-go**: large drag-and-drop zone front and center, no signup required to use it.
-- **Honest scope**: ship the formats we can do well in-browser. Office docs (DOCX/XLSX/PPTX) realistically need a server, so we'll scope them carefully (see below).
+- Lives at a clean URL (e.g. `/compress-mp3`, `/convert-png-to-jpg`, `/compress-mp4`)
+- Has a unique H1, meta title, meta description, and intro copy keyed off the task
+- Reuses the existing DropZone + queue, but pre-filters/locks the accepted format and target so the user lands ready to go
+- Includes an FAQ block, "How it works" steps, and internal links to related tools (huge for SEO)
+- Adds JSON-LD `SoftwareApplication` + `FAQPage` structured data
+- All pages link to each other via a "All tools" hub page (`/tools`) and a footer grid — internal linking is what makes pSEO work
 
-## Pages & layout
+## Page set (v1)
+
+**Compress** (8): mp3, wav, m4a, ogg, mp4, webm, jpg, png, webp
+**Convert audio** (12): mp3↔wav, mp3↔m4a, wav↔m4a, mp3↔ogg, m4a↔mp3, wav→mp3, etc.
+**Convert video** (2): mp4↔webm
+**Convert image** (6): png↔jpg, png↔webp, jpg↔webp
+**Hub**: `/tools` listing everything, grouped
+
+~28 pages from one template. Easy to expand later.
+
+## Page structure (each landing page)
 
 ```text
-┌──────────────────────────────────────────────┐
-│  Squish                       [Sign in]      │
-├──────────────────────────────────────────────┤
-│   Compress and convert files in your browser │
-│   Nothing is uploaded. Everything is private.│
-│                                              │
-│   ┌──────────────────────────────────────┐   │
-│   │                                      │   │
-│   │      Drop files here or click        │   │
-│   │      Images · PDFs · Audio · Video   │   │
-│   │                                      │   │
-│   └──────────────────────────────────────┘   │
-│                                              │
-│   [Image] [PDF] [Audio] [Video] [Documents]  │
-└──────────────────────────────────────────────┘
+[Header — same as home]
+H1: Compress MP3 online — free, private, in your browser
+Subhead: One-sentence value prop tuned to the task
+[DropZone — accepts only .mp3, target locked to MP3 + bitrate selector]
+[3-step "How it works" strip]
+[FAQ: 4–6 Q&As — "Is it free?", "Are my files uploaded?", "What bitrate should I use?", etc.]
+[Related tools grid: 6 internal links]
+[Footer — same as home, with full tool sitemap]
 ```
 
-After dropping files, each row shows: thumbnail, name, original size → compressed size, format selector, quality slider, and a download button. Batch download as ZIP.
+## Technical plan
 
-Routes:
-- `/` — main tool (drop zone + file list)
-- `/history` — past conversions (signed-in only)
-- `/about` — privacy explanation
-- `/auth` — sign in / sign up
+### 1. Tool config (`src/lib/tools.ts`)
 
-## File type support
+Single source of truth. One entry per page:
 
-| Type | Operations | Library |
-|------|-----------|---------|
-| **Images** (JPG, PNG, WebP, AVIF, HEIC) | compress, convert, resize | `browser-image-compression` + `@jsquash/*` (WASM encoders for AVIF/WebP/JPEG/PNG) + `heic-to` for HEIC decode |
-| **PDFs** | compress, merge, split, PDF↔images | `pdf-lib` + `pdfjs-dist` |
-| **Audio** (MP3, WAV, M4A, OGG) | compress, convert | `@ffmpeg/ffmpeg` (ffmpeg.wasm), lazy-loaded |
-| **Video** (MP4, WebM, MOV) | compress, convert, trim | `@ffmpeg/ffmpeg`, lazy-loaded |
-| **Documents** (DOCX/XLSX/PPTX) | convert to PDF | scoped to **DOCX → PDF** and **DOCX → HTML** using `mammoth.js` + client-side rendering. Full Office conversion isn't realistic in-browser; we'll be upfront about that. |
+```ts
+{
+  slug: "compress-mp3",
+  kind: "compress",
+  category: "audio",
+  inputExt: ["mp3"],
+  targetFormat: "mp3",
+  title: "Compress MP3 Online — Free & Private | Squished",
+  h1: "Compress MP3 files in your browser",
+  description: "Shrink MP3 files up to 80% without uploading...",
+  faq: [{ q: "...", a: "..." }, ...],
+  related: ["compress-wav", "convert-mp3-to-m4a", ...],
+}
+```
 
-ffmpeg.wasm is ~30 MB so it loads only when the user picks an audio/video file, with a clear progress indicator.
+### 2. Single dynamic route
 
-## Optional accounts (Lovable Cloud)
+In `App.tsx`, add `<Route path="/:slug" element={<ToolPage />} />` (kept above the `*` catch-all). `ToolPage` looks up the slug in the config; unknown slug → `NotFound`.
 
-Anonymous use is fully featured. Signing in adds:
-- **History**: list of past conversions (filename, original size, output size, format, date). Only metadata is stored — never the file contents.
-- **Saved presets**: e.g. "Web JPEG 80%", "PDF max compress".
+### 3. `ToolPage` component (`src/pages/ToolPage.tsx`)
 
-Tables (in Lovable Cloud):
-- `profiles` (id, display_name, created_at)
-- `conversions` (id, user_id, original_name, original_size, output_size, source_format, target_format, created_at)
-- `presets` (id, user_id, name, config jsonb)
-- `user_roles` + `app_role` enum (separate table, `has_role()` security-definer function — never store roles on profiles)
+- Renders the template above using config
+- Uses `react-helmet-async` for per-page `<title>`, meta description, canonical, Open Graph, and JSON-LD (`SoftwareApplication` + `FAQPage`)
+- Filters DropZone to `inputExt`; pre-sets `targetFormat` on new queue items
+- Passes a "lockedTarget" prop to `FileRow` (or just defaults the format) so users still land on the right output
 
-RLS: each table restricted to `auth.uid() = user_id`.
+### 4. Hub page (`src/pages/Tools.tsx`)
 
-## About n8n
+`/tools` — grid of every tool grouped by category. Linked from header and footer.
 
-You mentioned you have n8n. Since we picked **fully in-browser** processing, n8n isn't on the critical path — but it's a good fit for optional add-ons later, e.g.:
-- Webhook to email yourself a daily summary of conversions
-- "Send compressed file to Google Drive / Dropbox" action
+### 5. Home page
 
-We'll leave clean integration points (a "Send to…" menu) so an n8n webhook can be wired in later without rework. Not built in v1.
+Add a "Popular tools" section linking to ~12 top pages — gives the homepage internal-link juice and helps Google discover them.
 
-## Visual style
+### 6. SEO infrastructure
 
-Clean utility, TinyPNG-inspired but distinctive:
-- Off-white background, near-black text, single bold accent color (a saturated lime/teal — TBD, not the AI-default purple).
-- Distinctive typography: a geometric display font (e.g. Space Grotesk) for headings, Inter or system-ui for UI.
-- Minimal motion: only the drop zone reacts (border + subtle scale on dragover) and per-file progress bars.
-- Mobile-first; the drop zone becomes a tap-to-pick button on small screens (you're currently viewing at 411px).
+- `react-helmet-async` for per-page meta (install)
+- Generate `public/sitemap.xml` at build time via a tiny Vite plugin or a prebuild script that reads `tools.ts` and writes the file. Include `/`, `/tools`, and every tool slug.
+- Update `public/robots.txt` to reference the sitemap
+- Add canonical tags
+- Pre-render: optional but recommended later — vanilla Vite SPAs serve an empty shell to crawlers. Google generally renders JS now, but for best ranking we'd add `vite-plugin-ssg` or `react-snap` in a follow-up. v1 ships with helmet + sitemap (works, just slightly weaker than pre-rendered HTML).
 
-## Technical implementation notes
+### 7. Schema additions
 
-- **State**: per-file processing state machine (`queued → processing → done | error`) using Zustand or React context. Web Workers for heavy work to keep the UI responsive.
-- **Streaming**: process files one at a time for memory safety; show queue progress.
-- **ZIP output**: `jszip` for batch downloads.
-- **WASM hosting**: ffmpeg.wasm and jSquash WASM binaries served from `public/wasm/` per the project's WASM rules (client-only, never in SSR).
-- **Limits**: hard cap at ~2 GB per file (browser memory); show a friendly error above that.
-- **SEO**: H1 "Compress and convert files in your browser", meta description under 160 chars, JSON-LD `SoftwareApplication`.
+`TargetFormat` already covers all needed formats. Minor: extend `DropZone` to accept an optional `accept` prop forwarded to the file input so each page only takes its format.
 
-## Build phases
+## Out of scope for v1
 
-1. **Foundation + Images** — design system, drop zone, image compress/convert (the most-used path).
-2. **PDFs** — compress, merge, split, PDF↔image.
-3. **Audio/Video** — lazy-loaded ffmpeg.wasm with progress UI.
-4. **Documents** — DOCX → PDF/HTML via mammoth, with clear "limited support" messaging.
-5. **Accounts + history** — Lovable Cloud, auth page, history page, presets.
+- Pre-rendering / SSG (separate follow-up)
+- Blog / article pages
+- Localized (multi-language) URLs
+- PDF tools (none implemented yet)
 
-We can stop after any phase and ship.
+## Files touched / created
+
+- create `src/lib/tools.ts` — config for all pages
+- create `src/pages/ToolPage.tsx` — dynamic landing page template
+- create `src/pages/Tools.tsx` — hub page
+- create `src/components/seo/Seo.tsx` — helmet wrapper + JSON-LD helper
+- create `src/components/seo/Faq.tsx`, `HowItWorks.tsx`, `RelatedTools.tsx`
+- edit `src/App.tsx` — add `/tools` and `/:slug` routes, wrap with `HelmetProvider`
+- edit `src/pages/Index.tsx` — add "Popular tools" section + footer tool grid
+- edit `src/components/DropZone.tsx` — optional `accept` prop
+- create `scripts/generate-sitemap.ts` + wire into `package.json` build
+- edit `public/robots.txt` — add sitemap line
+- install `react-helmet-async`
+
+## Outcome
+
+Every supported task gets its own ranking-ready URL with unique copy, FAQ, structured data, and a dense internal-link graph — same pattern CloudConvert uses to rank for hundreds of "compress X" / "convert X to Y" queries.

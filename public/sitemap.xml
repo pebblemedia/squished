@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://squished.app</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://squished.app/tools</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/compress-mp3</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/compress-wav</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/compress-m4a</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/compress-ogg</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-wav-to-mp3</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-mp3-to-wav</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-m4a-to-mp3</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-mp3-to-m4a</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-wav-to-m4a</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-m4a-to-wav</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-ogg-to-mp3</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-mp3-to-ogg</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/compress-mp4</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/compress-webm</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-mp4-to-webm</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-webm-to-mp4</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/compress-jpg</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/compress-png</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/compress-webp</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-png-to-jpg</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-jpg-to-png</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-png-to-webp</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-webp-to-png</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-jpg-to-webp</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://squished.app/convert-webp-to-jpg</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+</urlset>
