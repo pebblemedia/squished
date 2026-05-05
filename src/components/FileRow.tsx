@@ -33,6 +33,7 @@ export function FileRow({ id }: { id: string }) {
   };
 
   const isAudio = item.kind === "audio";
+  const isVideo = item.kind === "video";
 
   return (
     <div className="rounded-xl border bg-card p-3 shadow-soft sm:p-4">
