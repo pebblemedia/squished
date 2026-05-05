@@ -119,10 +119,16 @@ export async function compressAudio(
   try {
     await ff.writeFile(inputName, await fetchFile(item.file));
 
+    // Low bitrates require mono + a lower sample rate or the encoder will
+    // refuse / produce garbage (libmp3lame minimums depend on sample rate).
+    const lowBitrate = bitrate <= 48;
+    const veryLow = bitrate <= 24;
     const args = [
       "-i", inputName,
       ...target.codec,
       ...(target.ext === "wav" ? [] : ["-b:a", `${bitrate}k`]),
+      ...(lowBitrate ? ["-ac", "1"] : []),
+      ...(veryLow ? ["-ar", "22050"] : lowBitrate ? ["-ar", "32000"] : []),
       outName,
     ];
     await ff.exec(args);
