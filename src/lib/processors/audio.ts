@@ -3,8 +3,10 @@ import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import type { QueueItem } from "../files";
 import { replaceExt } from "../files";
 
-// Single-threaded UMD build — no COOP/COEP headers required.
-const CORE_BASE = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
+// Single-threaded UMD build — self-hosted from /public/wasm/.
+// (unpkg.com is slow / sometimes throttles the 31 MB wasm download.)
+const CORE_JS = "/wasm/ffmpeg-core.js";
+const CORE_WASM = "/wasm/ffmpeg-core.wasm";
 
 let ffmpegInstance: FFmpeg | null = null;
 let loadingPromise: Promise<FFmpeg> | null = null;
@@ -14,25 +16,68 @@ export function isAudio(file: File) {
   return /\.(mp3|wav|m4a|aac|ogg|flac|opus)$/i.test(file.name);
 }
 
+// Fetch with real download progress (Content-Length based).
+async function fetchWithProgress(
+  url: string,
+  mime: string,
+  onProgress: (loaded: number, total: number) => void
+): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
+  const total = Number(res.headers.get("content-length") ?? 0);
+  if (!res.body) {
+    const blob = await res.blob();
+    return URL.createObjectURL(new Blob([blob], { type: mime }));
+  }
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let loaded = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      chunks.push(value);
+      loaded += value.length;
+      onProgress(loaded, total);
+    }
+  }
+  return URL.createObjectURL(new Blob(chunks as BlobPart[], { type: mime }));
+}
+
 export async function getFFmpeg(onLoadProgress?: (p: number) => void): Promise<FFmpeg> {
   if (ffmpegInstance) return ffmpegInstance;
   if (loadingPromise) return loadingPromise;
 
   loadingPromise = (async () => {
     const ff = new FFmpeg();
+    ff.on("log", ({ message }) => console.log("[ffmpeg]", message));
+    onLoadProgress?.(2);
+
+    const coreURL = await toBlobURL(CORE_JS, "text/javascript");
     onLoadProgress?.(5);
-    const [coreURL, wasmURL] = await Promise.all([
-      toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-      toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
-    ]);
-    onLoadProgress?.(60);
+
+    // wasm is the big one (~31 MB) — track real progress 5 → 90.
+    const wasmURL = await fetchWithProgress(CORE_WASM, "application/wasm", (l, t) => {
+      const frac = t > 0 ? l / t : 0;
+      onLoadProgress?.(5 + frac * 85);
+    });
+
+    onLoadProgress?.(92);
     await ff.load({ coreURL, wasmURL });
     onLoadProgress?.(100);
     ffmpegInstance = ff;
     return ff;
   })();
 
-  return loadingPromise;
+  try {
+    return await loadingPromise;
+  } catch (err) {
+    loadingPromise = null;
+    console.error("[ffmpeg] load failed:", err);
+    throw new Error(
+      `Couldn't load audio engine: ${err instanceof Error ? err.message : "unknown error"}`
+    );
+  }
 }
 
 const targetExtFor: Record<string, { ext: string; codec: string[] }> = {
