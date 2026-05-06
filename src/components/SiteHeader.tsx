@@ -39,18 +39,14 @@ export function SiteHeader({ logoFullSrc, logoShrunkSrc }: SiteHeaderProps = {})
         )}
       >
         <Link to="/" className="flex items-center gap-2.5">
-          <span
+          <img
+            src={scrolled ? shrunkSrc : fullSrc}
+            alt="Squished logo"
             className={cn(
-              "grid place-items-center rounded-xl bg-foreground p-1.5 transition-all duration-300",
-              scrolled ? "size-8" : "size-12"
+              "transition-all duration-300",
+              scrolled ? "size-12" : "size-20"
             )}
-          >
-            <img
-              src={scrolled ? shrunkSrc : fullSrc}
-              alt="Squished logo"
-              className="size-full"
-            />
-          </span>
+          />
           <span
             className={cn(
               "font-display font-bold tracking-tight transition-all duration-300",
