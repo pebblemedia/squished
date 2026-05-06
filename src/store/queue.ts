@@ -1,10 +1,13 @@
 import { create } from "zustand";
 import type { QueueItem, TargetFormat } from "@/lib/files";
 import { detectKind } from "@/lib/files";
-import { compressImage, makeThumbnail } from "@/lib/processors/image";
-import { compressAudio } from "@/lib/processors/audio";
-import { compressVideo } from "@/lib/processors/video";
-import { compressPdf, pdfToImages, imageToPdf } from "@/lib/processors/pdf";
+
+// Processors touch browser-only APIs (canvas, pdfjs worker, ffmpeg.wasm).
+// Import them lazily so SSG/SSR renders don't try to evaluate that code.
+const loadImage = () => import("@/lib/processors/image");
+const loadAudio = () => import("@/lib/processors/audio");
+const loadVideo = () => import("@/lib/processors/video");
+const loadPdf = () => import("@/lib/processors/pdf");
 
 interface QueueState {
   items: QueueItem[];
@@ -50,6 +53,7 @@ export const useQueue = create<QueueState>((set, get) => ({
 
     newItems.forEach(async (it) => {
       if (it.kind !== "image") return;
+      const { makeThumbnail } = await loadImage();
       const thumb = await makeThumbnail(it.file);
       set({
         items: get().items.map((x) => (x.id === it.id ? { ...x, thumbnail: thumb } : x)),
@@ -90,22 +94,27 @@ export const useQueue = create<QueueState>((set, get) => ({
 
       let result: { blob: Blob; name: string };
       if (item.kind === "image") {
+        const mod = await loadImage();
         if (item.targetFormat === "pdf") {
-          result = await imageToPdf(item, onProgress);
+          const pdfMod = await loadPdf();
+          result = await pdfMod.imageToPdf(item, onProgress);
         } else {
-          result = await compressImage(item, onProgress);
+          result = await mod.compressImage(item, onProgress);
         }
       } else if (item.kind === "audio") {
-        result = await compressAudio(item, onProgress);
+        const mod = await loadAudio();
+        result = await mod.compressAudio(item, onProgress);
       } else if (item.kind === "video") {
-        result = await compressVideo(item, onProgress);
+        const mod = await loadVideo();
+        result = await mod.compressVideo(item, onProgress);
       } else if (item.kind === "pdf") {
+        const mod = await loadPdf();
         if (item.targetFormat === "pdf-to-jpg") {
-          result = await pdfToImages(item, "jpg", onProgress);
+          result = await mod.pdfToImages(item, "jpg", onProgress);
         } else if (item.targetFormat === "pdf-to-png") {
-          result = await pdfToImages(item, "png", onProgress);
+          result = await mod.pdfToImages(item, "png", onProgress);
         } else {
-          result = await compressPdf(item, onProgress);
+          result = await mod.compressPdf(item, onProgress);
         }
       } else {
         throw new Error("Unsupported file type.");
