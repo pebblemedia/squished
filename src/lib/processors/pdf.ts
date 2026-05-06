@@ -7,33 +7,7 @@ import { replaceExt } from "../files";
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
-async function renderPdfPages(
-  file: File,
-  scale: number,
-  onProgress: (p: number) => void
-): Promise<{ blob: Blob; width: number; height: number }[]> {
-  const buf = await file.arrayBuffer();
-  const doc = await pdfjs.getDocument({ data: buf }).promise;
-  const pages: { blob: Blob; width: number; height: number }[] = [];
-  for (let i = 1; i <= doc.numPages; i++) {
-    const page = await doc.getPage(i);
-    const viewport = page.getViewport({ scale });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvasContext: ctx, viewport, canvas } as unknown as Parameters<typeof page.render>[0]).promise;
-    const blob: Blob = await new Promise((resolve) =>
-      canvas.toBlob((b) => resolve(b!), "image/jpeg", 0.85)
-    );
-    pages.push({ blob, width: canvas.width, height: canvas.height });
-    onProgress((i / doc.numPages) * 80);
-  }
-  await doc.destroy();
-  return pages;
-}
+
 
 /** Compress a PDF by rasterising each page to a JPEG and rebuilding the PDF. */
 export async function compressPdf(

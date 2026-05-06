@@ -1,4 +1,4 @@
-import { Download, Loader2, Trash2, CheckCircle2, AlertTriangle, FileImage, Music, Film } from "lucide-react";
+import { Download, Loader2, Trash2, CheckCircle2, AlertTriangle, FileImage, Music, Film, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -34,6 +34,8 @@ export function FileRow({ id }: { id: string }) {
 
   const isAudio = item.kind === "audio";
   const isVideo = item.kind === "video";
+  const isPdf = item.kind === "pdf";
+  const isImg = item.kind === "image";
 
   return (
     <div className="rounded-xl border bg-card p-3 shadow-soft sm:p-4">
@@ -45,6 +47,8 @@ export function FileRow({ id }: { id: string }) {
             <Music className="size-6 text-muted-foreground" />
           ) : isVideo ? (
             <Film className="size-6 text-muted-foreground" />
+          ) : isPdf ? (
+            <FileText className="size-6 text-muted-foreground" />
           ) : (
             <FileImage className="size-6 text-muted-foreground" />
           )}
