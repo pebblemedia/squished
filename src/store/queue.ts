@@ -94,22 +94,27 @@ export const useQueue = create<QueueState>((set, get) => ({
 
       let result: { blob: Blob; name: string };
       if (item.kind === "image") {
+        const mod = await loadImage();
         if (item.targetFormat === "pdf") {
-          result = await imageToPdf(item, onProgress);
+          const pdfMod = await loadPdf();
+          result = await pdfMod.imageToPdf(item, onProgress);
         } else {
-          result = await compressImage(item, onProgress);
+          result = await mod.compressImage(item, onProgress);
         }
       } else if (item.kind === "audio") {
-        result = await compressAudio(item, onProgress);
+        const mod = await loadAudio();
+        result = await mod.compressAudio(item, onProgress);
       } else if (item.kind === "video") {
-        result = await compressVideo(item, onProgress);
+        const mod = await loadVideo();
+        result = await mod.compressVideo(item, onProgress);
       } else if (item.kind === "pdf") {
+        const mod = await loadPdf();
         if (item.targetFormat === "pdf-to-jpg") {
-          result = await pdfToImages(item, "jpg", onProgress);
+          result = await mod.pdfToImages(item, "jpg", onProgress);
         } else if (item.targetFormat === "pdf-to-png") {
-          result = await pdfToImages(item, "png", onProgress);
+          result = await mod.pdfToImages(item, "png", onProgress);
         } else {
-          result = await compressPdf(item, onProgress);
+          result = await mod.compressPdf(item, onProgress);
         }
       } else {
         throw new Error("Unsupported file type.");
