@@ -45,7 +45,7 @@ export function SiteHeader({ logoFullSrc, logoShrunkSrc }: SiteHeaderProps = {})
             alt="Squished"
             className={cn(
               "transition-all duration-300 w-auto",
-              scrolled ? "h-8" : "h-10 sm:h-12"
+              scrolled ? "h-6" : "h-7 sm:h-8"
             )}
           />
         </Link>
