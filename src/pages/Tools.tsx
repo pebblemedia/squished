@@ -6,16 +6,18 @@ import { Seo, canonicalFor } from "@/components/seo/Seo";
 import { TOOLS, type ToolCategory } from "@/lib/tools";
 
 const CATEGORY_LABELS: Record<ToolCategory, string> = {
+  pdf: "PDF",
+  image: "Image",
   audio: "Audio",
   video: "Video",
-  image: "Image",
 };
 
 const Tools = () => {
   const grouped: Record<ToolCategory, typeof TOOLS> = {
+    pdf: TOOLS.filter((t) => t.category === "pdf"),
+    image: TOOLS.filter((t) => t.category === "image"),
     audio: TOOLS.filter((t) => t.category === "audio"),
     video: TOOLS.filter((t) => t.category === "video"),
-    image: TOOLS.filter((t) => t.category === "image"),
   };
 
   return (
