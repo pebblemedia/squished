@@ -3,16 +3,17 @@ import { TOOLS } from "@/lib/tools";
 
 export function SiteFooter() {
   const groups = {
+    pdf: TOOLS.filter((t) => t.category === "pdf"),
+    image: TOOLS.filter((t) => t.category === "image"),
     audio: TOOLS.filter((t) => t.category === "audio"),
     video: TOOLS.filter((t) => t.category === "video"),
-    image: TOOLS.filter((t) => t.category === "image"),
   };
 
   return (
     <footer className="relative z-10 border-t bg-card/30">
       <div className="mx-auto max-w-5xl px-5 py-10">
-        <div className="grid gap-8 sm:grid-cols-3">
-          {(["audio", "video", "image"] as const).map((cat) => (
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {(["pdf", "image", "audio", "video"] as const).map((cat) => (
             <div key={cat}>
               <h3 className="font-display text-xs font-semibold uppercase tracking-wider text-foreground">
                 {cat}
