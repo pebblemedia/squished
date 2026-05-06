@@ -38,7 +38,7 @@ export function SiteHeader({ logoFullSrc, logoShrunkSrc }: SiteHeaderProps = {})
           scrolled ? "py-2" : "py-5 sm:py-6"
         )}
       >
-        <Link to="/" className="flex items-center gap-2.5">
+        <Link to="/" className="flex items-center gap-0.5">
           <img
             src={scrolled ? shrunkSrc : fullSrc}
             alt="Squished logo"
