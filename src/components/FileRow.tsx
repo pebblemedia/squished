@@ -1,4 +1,4 @@
-import { Download, Loader2, Trash2, CheckCircle2, AlertTriangle, FileImage, Music, Film } from "lucide-react";
+import { Download, Loader2, Trash2, CheckCircle2, AlertTriangle, FileImage, Music, Film, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
@@ -34,6 +34,8 @@ export function FileRow({ id }: { id: string }) {
 
   const isAudio = item.kind === "audio";
   const isVideo = item.kind === "video";
+  const isPdf = item.kind === "pdf";
+  const isImg = item.kind === "image";
 
   return (
     <div className="rounded-xl border bg-card p-3 shadow-soft sm:p-4">
@@ -45,6 +47,8 @@ export function FileRow({ id }: { id: string }) {
             <Music className="size-6 text-muted-foreground" />
           ) : isVideo ? (
             <Film className="size-6 text-muted-foreground" />
+          ) : isPdf ? (
+            <FileText className="size-6 text-muted-foreground" />
           ) : (
             <FileImage className="size-6 text-muted-foreground" />
           )}
@@ -116,7 +120,15 @@ export function FileRow({ id }: { id: string }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="original">Keep format</SelectItem>
+            {isPdf ? (
+              <>
+                <SelectItem value="pdf">Compress PDF</SelectItem>
+                <SelectItem value="pdf-to-jpg">PDF → JPG (zip)</SelectItem>
+                <SelectItem value="pdf-to-png">PDF → PNG (zip)</SelectItem>
+              </>
+            ) : (
+              <SelectItem value="original">Keep format</SelectItem>
+            )}
             {isAudio ? (
               <>
                 <SelectItem value="mp3">MP3</SelectItem>
@@ -129,13 +141,14 @@ export function FileRow({ id }: { id: string }) {
                 <SelectItem value="mp4">MP4 (H.264)</SelectItem>
                 <SelectItem value="webm">WebM (VP9)</SelectItem>
               </>
-            ) : (
+            ) : isImg ? (
               <>
                 <SelectItem value="jpeg">JPEG</SelectItem>
                 <SelectItem value="png">PNG</SelectItem>
                 <SelectItem value="webp">WebP</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
               </>
-            )}
+            ) : null}
           </SelectContent>
         </Select>
 

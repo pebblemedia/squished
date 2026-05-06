@@ -4,6 +4,7 @@ import { detectKind } from "@/lib/files";
 import { compressImage, makeThumbnail } from "@/lib/processors/image";
 import { compressAudio } from "@/lib/processors/audio";
 import { compressVideo } from "@/lib/processors/video";
+import { compressPdf, pdfToImages, imageToPdf } from "@/lib/processors/pdf";
 
 interface QueueState {
   items: QueueItem[];
@@ -30,6 +31,8 @@ export const useQueue = create<QueueState>((set, get) => ({
     const list = Array.from(files);
     const newItems: QueueItem[] = list.map((file) => {
       const kind = detectKind(file);
+      let targetFormat: TargetFormat = defaults?.targetFormat ?? "original";
+      if (kind === "pdf" && !defaults?.targetFormat) targetFormat = "pdf";
       return {
         id: newId(),
         file,
@@ -38,14 +41,13 @@ export const useQueue = create<QueueState>((set, get) => ({
         originalSize: file.size,
         status: "queued",
         progress: 0,
-        targetFormat: defaults?.targetFormat ?? "original",
+        targetFormat,
         quality: 0.75,
         bitrate: kind === "audio" ? 128 : undefined,
       };
     });
     set({ items: [...get().items, ...newItems] });
 
-    // generate thumbnails async (images only)
     newItems.forEach(async (it) => {
       if (it.kind !== "image") return;
       const thumb = await makeThumbnail(it.file);
@@ -54,7 +56,6 @@ export const useQueue = create<QueueState>((set, get) => ({
       });
     });
 
-    // auto-process sequentially for audio (ffmpeg single instance), parallel-ish for images
     newItems.forEach((it) => void get().process(it.id));
   },
 
@@ -89,13 +90,25 @@ export const useQueue = create<QueueState>((set, get) => ({
 
       let result: { blob: Blob; name: string };
       if (item.kind === "image") {
-        result = await compressImage(item, onProgress);
+        if (item.targetFormat === "pdf") {
+          result = await imageToPdf(item, onProgress);
+        } else {
+          result = await compressImage(item, onProgress);
+        }
       } else if (item.kind === "audio") {
         result = await compressAudio(item, onProgress);
       } else if (item.kind === "video") {
         result = await compressVideo(item, onProgress);
+      } else if (item.kind === "pdf") {
+        if (item.targetFormat === "pdf-to-jpg") {
+          result = await pdfToImages(item, "jpg", onProgress);
+        } else if (item.targetFormat === "pdf-to-png") {
+          result = await pdfToImages(item, "png", onProgress);
+        } else {
+          result = await compressPdf(item, onProgress);
+        }
       } else {
-        throw new Error("Unsupported file type. Images, audio & video supported; PDFs coming soon.");
+        throw new Error("Unsupported file type.");
       }
 
       set({

@@ -1,6 +1,6 @@
 import type { TargetFormat } from "./files";
 
-export type ToolCategory = "audio" | "video" | "image";
+export type ToolCategory = "audio" | "video" | "image" | "pdf";
 export type ToolKind = "compress" | "convert";
 
 export interface FaqEntry {
@@ -304,6 +304,140 @@ export const TOOLS: Tool[] = [
   imageConvert("webp", "png", "WebP", "PNG", "png", ["convert-png-to-webp", "convert-webp-to-jpg", "compress-webp"]),
   imageConvert("jpg", "webp", "JPG", "WebP", "webp", ["convert-webp-to-jpg", "convert-jpg-to-png", "compress-jpg"]),
   imageConvert("webp", "jpg", "WebP", "JPG", "jpeg", ["convert-jpg-to-webp", "convert-webp-to-png", "compress-webp"]),
+
+  // ---- PDF ----
+  {
+    slug: "compress-pdf",
+    kind: "compress",
+    category: "pdf",
+    inputExt: ["pdf"],
+    targetFormat: "pdf",
+    label: "Compress PDF",
+    title: "Compress PDF Online — Free, Private, In Your Browser | Squished",
+    h1: "Compress PDF files in your browser",
+    description: "Shrink PDF files up to 90% without uploading. Free, private, and runs entirely on your device — no signup, no waiting.",
+    intro: "Drop a PDF and Squished re-renders each page at a lower DPI and re-encodes images as JPEG locally. Big savings on scanned and image-heavy PDFs — your file never leaves your device.",
+    faq: [
+      PRIVACY_FAQ,
+      {
+        q: "How does PDF compression work?",
+        a: "Most PDF size comes from embedded images. Squished rasterizes each page to a JPEG at a configurable quality and rebuilds the PDF. This is the same technique used by major online PDF compressors and typically shrinks files 50–90%.",
+      },
+      {
+        q: "Will compression keep my text searchable?",
+        a: "No. Because pages are re-rendered to images, vector text becomes part of the image and is no longer selectable or searchable. If you need searchable text, keep a copy of the original or use a lower compression level.",
+      },
+      FREE_FAQ,
+      SIZE_FAQ,
+    ],
+    related: ["convert-pdf-to-jpg", "convert-pdf-to-png", "convert-jpg-to-pdf", "convert-png-to-pdf"],
+  },
+  {
+    slug: "convert-pdf-to-jpg",
+    kind: "convert",
+    category: "pdf",
+    inputExt: ["pdf"],
+    targetFormat: "pdf-to-jpg",
+    label: "PDF to JPG",
+    title: "Convert PDF to JPG Online — Free & Private | Squished",
+    h1: "Convert PDF to JPG in your browser",
+    description: "Turn each PDF page into a high-quality JPG image. Free, no upload, no signup — runs entirely on your device.",
+    intro: "Drop a PDF and download a ZIP of JPGs — one per page. Everything runs locally with WebAssembly. No accounts, no upload limits.",
+    faq: [
+      PRIVACY_FAQ,
+      {
+        q: "How is the PDF rendered?",
+        a: "Squished uses pdf.js to render each page to a canvas, then exports a JPEG. The quality slider controls render DPI and JPEG quality.",
+      },
+      {
+        q: "Why is the output a ZIP?",
+        a: "PDFs typically have multiple pages, so we bundle the page images into one ZIP for easy download.",
+      },
+      FREE_FAQ,
+      SIZE_FAQ,
+    ],
+    related: ["convert-pdf-to-png", "compress-pdf", "convert-jpg-to-pdf"],
+  },
+  {
+    slug: "convert-pdf-to-png",
+    kind: "convert",
+    category: "pdf",
+    inputExt: ["pdf"],
+    targetFormat: "pdf-to-png",
+    label: "PDF to PNG",
+    title: "Convert PDF to PNG Online — Free & Private | Squished",
+    h1: "Convert PDF to PNG in your browser",
+    description: "Turn each PDF page into a lossless PNG. Free, no upload, no signup — runs entirely on your device.",
+    intro: "Drop a PDF and download a ZIP of PNGs — one per page. PNG is lossless, ideal when you need crisp text and graphics.",
+    faq: [
+      PRIVACY_FAQ,
+      {
+        q: "JPG vs PNG for PDF pages?",
+        a: "PNG is lossless and best for documents with text, line art, or transparency. JPG is smaller but introduces compression artifacts on text edges.",
+      },
+      FREE_FAQ,
+      SIZE_FAQ,
+    ],
+    related: ["convert-pdf-to-jpg", "compress-pdf", "convert-png-to-pdf"],
+  },
+  {
+    slug: "convert-jpg-to-pdf",
+    kind: "convert",
+    category: "pdf",
+    inputExt: ["jpg", "jpeg"],
+    targetFormat: "pdf",
+    label: "JPG to PDF",
+    title: "Convert JPG to PDF Online — Free & Private | Squished",
+    h1: "Convert JPG to PDF in your browser",
+    description: "Turn JPG images into PDF files instantly. Free, no upload — your photos never leave your device.",
+    intro: "Drop a JPG and Squished embeds it into a one-page PDF locally. Drop multiple files to convert each into its own PDF.",
+    faq: [
+      PRIVACY_FAQ,
+      {
+        q: "Can I combine multiple JPGs into one PDF?",
+        a: "Right now each image becomes its own PDF. Multi-image merge is on the roadmap — let us know if you'd like it!",
+      },
+      FREE_FAQ,
+      SIZE_FAQ,
+    ],
+    related: ["convert-pdf-to-jpg", "convert-png-to-pdf", "compress-pdf"],
+  },
+  {
+    slug: "convert-png-to-pdf",
+    kind: "convert",
+    category: "pdf",
+    inputExt: ["png"],
+    targetFormat: "pdf",
+    label: "PNG to PDF",
+    title: "Convert PNG to PDF Online — Free & Private | Squished",
+    h1: "Convert PNG to PDF in your browser",
+    description: "Turn PNG images into PDF files instantly. Free, no upload — your files stay on your device.",
+    intro: "Drop a PNG and Squished embeds it into a one-page PDF locally. Drop multiple files to get one PDF per image.",
+    faq: [
+      PRIVACY_FAQ,
+      {
+        q: "Will transparency be preserved?",
+        a: "PDFs render PNG with transparency over a white background by default, so the visual result matches what you'd see in a viewer.",
+      },
+      FREE_FAQ,
+      SIZE_FAQ,
+    ],
+    related: ["convert-pdf-to-png", "convert-jpg-to-pdf", "compress-pdf"],
+  },
+  {
+    slug: "convert-webp-to-pdf",
+    kind: "convert",
+    category: "pdf",
+    inputExt: ["webp"],
+    targetFormat: "pdf",
+    label: "WebP to PDF",
+    title: "Convert WebP to PDF Online — Free & Private | Squished",
+    h1: "Convert WebP to PDF in your browser",
+    description: "Turn WebP images into PDF files instantly. Free, no upload — your files stay on your device.",
+    intro: "Drop a WebP image and Squished re-encodes it locally and embeds it into a PDF — no servers involved.",
+    faq: [PRIVACY_FAQ, FREE_FAQ, SIZE_FAQ],
+    related: ["convert-jpg-to-pdf", "convert-png-to-pdf", "compress-pdf"],
+  },
 ];
 
 export const TOOLS_BY_SLUG: Record<string, Tool> = Object.fromEntries(
@@ -319,16 +453,16 @@ export function acceptString(tool: Tool): string {
 }
 
 export const POPULAR_SLUGS = [
+  "compress-pdf",
   "compress-mp3",
   "compress-mp4",
   "compress-jpg",
   "compress-png",
+  "convert-pdf-to-jpg",
   "convert-png-to-jpg",
+  "convert-jpg-to-pdf",
   "convert-jpg-to-webp",
   "convert-mp4-to-webm",
   "convert-wav-to-mp3",
   "convert-mp3-to-m4a",
-  "compress-webp",
-  "convert-png-to-webp",
-  "compress-wav",
 ];

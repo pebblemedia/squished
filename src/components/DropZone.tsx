@@ -41,7 +41,7 @@ export function DropZone({ onFiles, accept, hint, title }: DropZoneProps) {
         ref={inputRef}
         type="file"
         multiple
-        accept={accept ?? "image/*,audio/*,video/*,.mp3,.wav,.m4a,.ogg,.flac,.aac,.opus,.mp4,.webm,.mov,.mkv"}
+        accept={accept ?? "image/*,audio/*,video/*,application/pdf,.pdf,.mp3,.wav,.m4a,.ogg,.flac,.aac,.opus,.mp4,.webm,.mov,.mkv"}
         className="hidden"
         onChange={(e) => {
           if (e.target.files?.length) onFiles(e.target.files);
