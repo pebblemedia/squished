@@ -80,6 +80,11 @@ export function FileRow({ id }: { id: string }) {
                   </>
                 ) : null}
               </div>
+              {isPdf && item.status === "done" && (item.targetFormat === "pdf-to-jpg" || item.targetFormat === "pdf-to-png") && ratio !== null && ratio < 0 && (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Image archives are larger than the source PDF — pages become pixel grids. Lower the quality slider to shrink.
+                </p>
+              )}
             </div>
             <button
               onClick={() => remove(item.id)}
