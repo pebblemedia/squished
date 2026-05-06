@@ -3,7 +3,7 @@ import { Upload } from "lucide-react";
 import Lottie from "lottie-react";
 import { cn } from "@/lib/utils";
 import { useQueue } from "@/store/queue";
-import bunnyAnimation from "@/assets/bunny-storm.json";
+import rocketAnimation from "@/assets/file-upload-rocket.json";
 
 interface DropZoneProps {
   onFiles: (files: FileList | File[]) => void;
@@ -52,7 +52,7 @@ export function DropZone({ onFiles, accept, hint, title }: DropZoneProps) {
     (i) => i.status === "processing" || i.status === "queued"
   );
 
-  const recolored = useMemo(() => recolorLottie(bunnyAnimation, BRAND_RGB), []);
+  const recolored = rocketAnimation;
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
