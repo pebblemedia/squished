@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import logoFull from "@/assets/squished-logo.svg";
+import logoFull from "@/assets/squished-logo-full.svg";
+import logoIcon from "@/assets/squished-icon.svg";
 import { cn } from "@/lib/utils";
 
 interface SiteHeaderProps {
@@ -21,7 +22,7 @@ export function SiteHeader({ logoFullSrc, logoShrunkSrc }: SiteHeaderProps = {})
   }, []);
 
   const fullSrc = logoFullSrc ?? logoFull;
-  const shrunkSrc = logoShrunkSrc ?? fullSrc;
+  const shrunkSrc = logoShrunkSrc ?? logoIcon;
 
   return (
     <header
@@ -38,23 +39,15 @@ export function SiteHeader({ logoFullSrc, logoShrunkSrc }: SiteHeaderProps = {})
           scrolled ? "py-2" : "py-5 sm:py-6"
         )}
       >
-        <Link to="/" className="flex items-center gap-0.5">
+        <Link to="/" className="flex items-center" aria-label="Squished home">
           <img
             src={scrolled ? shrunkSrc : fullSrc}
-            alt="Squished logo"
+            alt="Squished"
             className={cn(
-              "transition-all duration-300",
-              scrolled ? "size-12" : "size-20"
+              "transition-all duration-300 w-auto",
+              scrolled ? "h-10" : "h-12 sm:h-14"
             )}
           />
-          <span
-            className={cn(
-              "font-display font-bold tracking-tight transition-all duration-300",
-              scrolled ? "text-base" : "text-xl"
-            )}
-          >
-            Squished
-          </span>
         </Link>
         <nav className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
           <Link to="/tools" className="hover:text-foreground">
