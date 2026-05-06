@@ -53,6 +53,7 @@ export const useQueue = create<QueueState>((set, get) => ({
 
     newItems.forEach(async (it) => {
       if (it.kind !== "image") return;
+      const { makeThumbnail } = await loadImage();
       const thumb = await makeThumbnail(it.file);
       set({
         items: get().items.map((x) => (x.id === it.id ? { ...x, thumbnail: thumb } : x)),
