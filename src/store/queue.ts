@@ -1,10 +1,13 @@
 import { create } from "zustand";
 import type { QueueItem, TargetFormat } from "@/lib/files";
 import { detectKind } from "@/lib/files";
-import { compressImage, makeThumbnail } from "@/lib/processors/image";
-import { compressAudio } from "@/lib/processors/audio";
-import { compressVideo } from "@/lib/processors/video";
-import { compressPdf, pdfToImages, imageToPdf } from "@/lib/processors/pdf";
+
+// Processors touch browser-only APIs (canvas, pdfjs worker, ffmpeg.wasm).
+// Import them lazily so SSG/SSR renders don't try to evaluate that code.
+const loadImage = () => import("@/lib/processors/image");
+const loadAudio = () => import("@/lib/processors/audio");
+const loadVideo = () => import("@/lib/processors/video");
+const loadPdf = () => import("@/lib/processors/pdf");
 
 interface QueueState {
   items: QueueItem[];
