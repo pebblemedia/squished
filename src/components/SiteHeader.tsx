@@ -1,19 +1,79 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import logo from "@/assets/squished-logo.svg";
+import logoFull from "@/assets/squished-logo.svg";
+import { cn } from "@/lib/utils";
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  /** Logo shown at the top of the page. Defaults to the bundled Squished mark. */
+  logoFullSrc?: string;
+  /** Logo shown when the header shrinks on scroll. Falls back to logoFullSrc. */
+  logoShrunkSrc?: string;
+}
+
+export function SiteHeader({ logoFullSrc, logoShrunkSrc }: SiteHeaderProps = {}) {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const fullSrc = logoFullSrc ?? logoFull;
+  const shrunkSrc = logoShrunkSrc ?? fullSrc;
+
   return (
-    <header className="relative z-10 mx-auto flex max-w-5xl items-center justify-between px-5 py-5 sm:py-6">
-      <Link to="/" className="flex items-center gap-2.5">
-        <span className="grid size-12 place-items-center rounded-xl bg-foreground p-1.5">
-          <img src={logo} alt="Squished logo" className="size-full" />
-        </span>
-        <span className="font-display text-xl font-bold tracking-tight">Squished</span>
-      </Link>
-      <nav className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
-        <Link to="/tools" className="hover:text-foreground">All tools</Link>
-        <span className="hidden sm:inline">100% private · runs in your browser</span>
-      </nav>
+    <header
+      className={cn(
+        "sticky top-0 z-30 w-full transition-all duration-300",
+        scrolled
+          ? "border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+          : "bg-transparent"
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto flex max-w-5xl items-center justify-between px-5 transition-all duration-300",
+          scrolled ? "py-2" : "py-5 sm:py-6"
+        )}
+      >
+        <Link to="/" className="flex items-center gap-2.5">
+          <span
+            className={cn(
+              "grid place-items-center rounded-xl bg-foreground p-1.5 transition-all duration-300",
+              scrolled ? "size-8" : "size-12"
+            )}
+          >
+            <img
+              src={scrolled ? shrunkSrc : fullSrc}
+              alt="Squished logo"
+              className="size-full"
+            />
+          </span>
+          <span
+            className={cn(
+              "font-display font-bold tracking-tight transition-all duration-300",
+              scrolled ? "text-base" : "text-xl"
+            )}
+          >
+            Squished
+          </span>
+        </Link>
+        <nav className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
+          <Link to="/tools" className="hover:text-foreground">
+            All tools
+          </Link>
+          <span
+            className={cn(
+              "hidden transition-opacity duration-300 sm:inline",
+              scrolled ? "opacity-0" : "opacity-100"
+            )}
+          >
+            100% private · runs in your browser
+          </span>
+        </nav>
+      </div>
     </header>
   );
 }
