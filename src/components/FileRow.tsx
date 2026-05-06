@@ -120,7 +120,15 @@ export function FileRow({ id }: { id: string }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="original">Keep format</SelectItem>
+            {isPdf ? (
+              <>
+                <SelectItem value="pdf">Compress PDF</SelectItem>
+                <SelectItem value="pdf-to-jpg">PDF → JPG (zip)</SelectItem>
+                <SelectItem value="pdf-to-png">PDF → PNG (zip)</SelectItem>
+              </>
+            ) : (
+              <SelectItem value="original">Keep format</SelectItem>
+            )}
             {isAudio ? (
               <>
                 <SelectItem value="mp3">MP3</SelectItem>
@@ -133,13 +141,14 @@ export function FileRow({ id }: { id: string }) {
                 <SelectItem value="mp4">MP4 (H.264)</SelectItem>
                 <SelectItem value="webm">WebM (VP9)</SelectItem>
               </>
-            ) : (
+            ) : isImg ? (
               <>
                 <SelectItem value="jpeg">JPEG</SelectItem>
                 <SelectItem value="png">PNG</SelectItem>
                 <SelectItem value="webp">WebP</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
               </>
-            )}
+            ) : null}
           </SelectContent>
         </Select>
 
