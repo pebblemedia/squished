@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { Head } from "vite-react-ssg";
 
 interface SeoProps {
   title: string;
@@ -15,7 +15,7 @@ export function Seo({ title, description, canonical, jsonLd }: SeoProps) {
     : [];
 
   return (
-    <Helmet>
+    <Head>
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonical} />
@@ -31,7 +31,7 @@ export function Seo({ title, description, canonical, jsonLd }: SeoProps) {
           {JSON.stringify(obj)}
         </script>
       ))}
-    </Helmet>
+    </Head>
   );
 }
 
