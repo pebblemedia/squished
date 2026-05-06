@@ -86,7 +86,7 @@ export async function pdfToImages(
   format: "jpg" | "png",
   onProgress: (p: number) => void
 ): Promise<{ blob: Blob; name: string }> {
-  const scale = 1.5 + item.quality * 1.5;
+  const scale = 1.0 + item.quality * 1.5; // 1.0× .. 2.5×
   const buf = await item.file.arrayBuffer();
   const doc = await pdfjs.getDocument({ data: buf }).promise;
   const zip = new JSZip();
