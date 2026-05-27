@@ -1,6 +1,6 @@
 import imageCompression from "browser-image-compression";
 import type { QueueItem, TargetFormat } from "../files";
-import { replaceExt } from "../files";
+import { isHeic, replaceExt } from "../files";
 
 const mimeFor: Partial<Record<Exclude<TargetFormat, "original">, string>> = {
   jpeg: "image/jpeg",
@@ -14,14 +14,38 @@ const extFor: Partial<Record<Exclude<TargetFormat, "original">, string>> = {
   webp: "webp",
 };
 
+async function decodeHeic(file: File, toMime: "image/jpeg" | "image/png", quality: number): Promise<File> {
+  const { heicTo } = await import("heic-to");
+  const blob = await heicTo({
+    blob: file,
+    type: toMime,
+    quality,
+  });
+  const ext = toMime === "image/png" ? "png" : "jpg";
+  return new File([blob], replaceExt(file.name, ext), { type: toMime });
+}
+
 export async function compressImage(
   item: QueueItem,
   onProgress: (p: number) => void
 ): Promise<{ blob: Blob; name: string }> {
-  const targetMime =
-    item.targetFormat === "original" ? item.file.type : mimeFor[item.targetFormat];
+  // HEIC needs to be decoded first because the browser can't render it.
+  let source: File = item.file;
+  if (isHeic(item.file)) {
+    onProgress(5);
+    // If the user wants PNG, decode to PNG to preserve quality. Otherwise decode to JPEG.
+    const decodeMime = item.targetFormat === "png" ? "image/png" : "image/jpeg";
+    source = await decodeHeic(item.file, decodeMime, Math.max(item.quality, 0.92));
+  }
 
-  const result = await imageCompression(item.file, {
+  // If target is "original" and the source is HEIC, fall back to JPEG (browsers can't write HEIC).
+  const effectiveTarget: TargetFormat =
+    item.targetFormat === "original" && isHeic(item.file) ? "jpeg" : item.targetFormat;
+
+  const targetMime =
+    effectiveTarget === "original" ? source.type : mimeFor[effectiveTarget];
+
+  const result = await imageCompression(source, {
     maxSizeMB: 50,
     maxWidthOrHeight: 4096,
     useWebWorker: true,
@@ -31,17 +55,24 @@ export async function compressImage(
   });
 
   const ext =
-    item.targetFormat === "original"
-      ? (item.name.split(".").pop() ?? "img")
-      : extFor[item.targetFormat];
+    effectiveTarget === "original"
+      ? (source.name.split(".").pop() ?? "img")
+      : extFor[effectiveTarget];
 
-  return { blob: result, name: replaceExt(item.name, ext) };
+  return { blob: result, name: replaceExt(item.name, ext!) };
 }
 
 export async function makeThumbnail(file: File): Promise<string | undefined> {
-  if (!file.type.startsWith("image/")) return undefined;
+  if (!file.type.startsWith("image/") && !isHeic(file)) return undefined;
   try {
-    const small = await imageCompression(file, {
+    const source = isHeic(file)
+      ? await (async () => {
+          const { heicTo } = await import("heic-to");
+          const blob = await heicTo({ blob: file, type: "image/jpeg", quality: 0.7 });
+          return new File([blob], replaceExt(file.name, "jpg"), { type: "image/jpeg" });
+        })()
+      : file;
+    const small = await imageCompression(source, {
       maxSizeMB: 0.05,
       maxWidthOrHeight: 200,
       useWebWorker: true,
@@ -50,6 +81,10 @@ export async function makeThumbnail(file: File): Promise<string | undefined> {
     });
     return URL.createObjectURL(small);
   } catch {
-    return URL.createObjectURL(file);
+    try {
+      return URL.createObjectURL(file);
+    } catch {
+      return undefined;
+    }
   }
 }
