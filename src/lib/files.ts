@@ -32,11 +32,20 @@ export const isImage = (file: File) => file.type.startsWith("image/");
 export function detectKind(file: File): FileKind {
   if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) return "pdf";
   if (file.type.startsWith("image/")) return "image";
+  if (/\.(heic|heif)$/i.test(file.name)) return "image";
   if (file.type.startsWith("video/")) return "video";
   if (file.type.startsWith("audio/")) return "audio";
   if (/\.(mp4|mov|webm|mkv|avi|m4v)$/i.test(file.name)) return "video";
   if (/\.(mp3|wav|m4a|aac|ogg|flac|opus)$/i.test(file.name)) return "audio";
   return "other";
+}
+
+export function isHeic(file: File): boolean {
+  return (
+    /\.(heic|heif)$/i.test(file.name) ||
+    file.type === "image/heic" ||
+    file.type === "image/heif"
+  );
 }
 
 export function formatBytes(bytes: number): string {
