@@ -305,6 +305,79 @@ export const TOOLS: Tool[] = [
   imageConvert("jpg", "webp", "JPG", "WebP", "webp", ["convert-webp-to-jpg", "convert-jpg-to-png", "compress-jpg"]),
   imageConvert("webp", "jpg", "WebP", "JPG", "jpeg", ["convert-jpg-to-webp", "convert-webp-to-png", "compress-webp"]),
 
+  // ---- HEIC (iPhone photo) convert ----
+  {
+    slug: "convert-heic-to-jpg",
+    kind: "convert",
+    category: "image",
+    inputExt: ["heic", "heif"],
+    targetFormat: "jpeg",
+    label: "HEIC to JPG",
+    title: "Convert HEIC to JPG Online — Free & Private | Squished",
+    h1: "Convert HEIC to JPG in your browser",
+    description: "Turn iPhone HEIC photos into JPG instantly. Free, no upload — your photos never leave your device.",
+    intro: "Drop HEIC or HEIF photos from your iPhone and Squished decodes them locally to JPG using WebAssembly. Nothing is uploaded.",
+    faq: [
+      PRIVACY_FAQ,
+      {
+        q: "Why convert HEIC to JPG?",
+        a: "HEIC is Apple's default photo format and isn't supported by many apps, websites, or Windows programs. JPG works everywhere.",
+      },
+      {
+        q: "Will I lose quality?",
+        a: "There's a small re-encoding step from HEIC to JPG. Squished uses a high default quality so the result looks visually identical to the original.",
+      },
+      FREE_FAQ,
+      SIZE_FAQ,
+    ],
+    related: ["convert-heic-to-png", "convert-heic-to-webp", "compress-jpg"],
+  },
+  {
+    slug: "convert-heic-to-png",
+    kind: "convert",
+    category: "image",
+    inputExt: ["heic", "heif"],
+    targetFormat: "png",
+    label: "HEIC to PNG",
+    title: "Convert HEIC to PNG Online — Free & Private | Squished",
+    h1: "Convert HEIC to PNG in your browser",
+    description: "Turn iPhone HEIC photos into lossless PNG files. Free, no upload — runs entirely on your device.",
+    intro: "Drop HEIC or HEIF photos and Squished decodes them locally to PNG. PNG is lossless, ideal when you need maximum quality.",
+    faq: [
+      PRIVACY_FAQ,
+      {
+        q: "HEIC to PNG vs JPG?",
+        a: "PNG is lossless but much larger. For photos, JPG is usually a better choice. Pick PNG if you need exact pixel fidelity or transparency.",
+      },
+      FREE_FAQ,
+      SIZE_FAQ,
+    ],
+    related: ["convert-heic-to-jpg", "convert-heic-to-webp", "compress-png"],
+  },
+  {
+    slug: "convert-heic-to-webp",
+    kind: "convert",
+    category: "image",
+    inputExt: ["heic", "heif"],
+    targetFormat: "webp",
+    label: "HEIC to WebP",
+    title: "Convert HEIC to WebP Online — Free & Private | Squished",
+    h1: "Convert HEIC to WebP in your browser",
+    description: "Turn iPhone HEIC photos into modern WebP files. Free, no upload — runs entirely on your device.",
+    intro: "Drop HEIC or HEIF photos and Squished decodes and re-encodes them locally to WebP — smaller than JPG at the same visual quality.",
+    faq: [
+      PRIVACY_FAQ,
+      {
+        q: "Why WebP?",
+        a: "WebP produces files 25–35% smaller than JPG at the same quality and is supported by every modern browser.",
+      },
+      FREE_FAQ,
+      SIZE_FAQ,
+    ],
+    related: ["convert-heic-to-jpg", "convert-heic-to-png", "compress-webp"],
+  },
+
+
   // ---- PDF ----
   {
     slug: "compress-pdf",
