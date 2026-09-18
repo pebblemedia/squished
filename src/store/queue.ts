@@ -20,6 +20,9 @@ interface QueueState {
   ) => void;
   process: (id: string) => Promise<void>;
   processAll: () => Promise<void>;
+  applyToAll: (
+    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate">>
+  ) => void;
 }
 
 const newId = () =>
@@ -151,6 +154,32 @@ export const useQueue = create<QueueState>((set, get) => ({
       if (it && it.status !== "done" && it.status !== "processing") {
         await get().process(id);
       }
+    }
+  },
+
+  applyToAll: (patch) => {
+    set({
+      items: get().items.map((x) => {
+        // Only apply a targetFormat that the item's kind actually supports.
+        let targetFormat = x.targetFormat;
+        if (patch.targetFormat) {
+          const f = patch.targetFormat;
+          const ok =
+            (x.kind === "image" && ["original", "jpeg", "png", "webp", "pdf"].includes(f)) ||
+            (x.kind === "audio" && ["original", "mp3", "m4a", "ogg", "wav"].includes(f)) ||
+            (x.kind === "video" && ["original", "mp4", "webm"].includes(f)) ||
+            (x.kind === "pdf" && ["pdf", "pdf-to-jpg", "pdf-to-png"].includes(f));
+          if (ok) targetFormat = f;
+        }
+        return {
+          ...x,
+          ...patch,
+          targetFormat,
+        };
+      }),
+    });
+    for (const it of get().items) {
+      void get().process(it.id);
     }
   },
 }));

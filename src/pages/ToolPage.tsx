@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import { Download, Trash2 } from "lucide-react";
 import { DropZone } from "@/components/DropZone";
 import { FileRow } from "@/components/FileRow";
+import { BulkControls } from "@/components/BulkControls";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -151,6 +152,7 @@ const ToolPage = () => {
                 </Button>
               </div>
             </div>
+            <BulkControls />
             <div className="mt-4 space-y-3">
               {items.map((it) => (
                 <FileRow key={it.id} id={it.id} />
