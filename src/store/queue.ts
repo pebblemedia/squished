@@ -20,6 +20,9 @@ interface QueueState {
   ) => void;
   process: (id: string) => Promise<void>;
   processAll: () => Promise<void>;
+  applyToAll: (
+    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate">>
+  ) => void;
 }
 
 const newId = () =>
