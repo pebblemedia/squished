@@ -152,6 +152,7 @@ const ToolPage = () => {
                 </Button>
               </div>
             </div>
+            <BulkControls />
             <div className="mt-4 space-y-3">
               {items.map((it) => (
                 <FileRow key={it.id} id={it.id} />
