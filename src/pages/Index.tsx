@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Download, Trash2, ArrowRight } from "lucide-react";
 import { DropZone } from "@/components/DropZone";
 import { FileRow } from "@/components/FileRow";
+import { BulkControls } from "@/components/BulkControls";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
