@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 import { sitemapPlugin } from "./scripts/sitemap-plugin";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode, isSsrBuild }) => ({
   server: {
     host: "::",
     port: 8080,
@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), sitemapPlugin(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), sitemapPlugin(), mode === "development" && !isSsrBuild && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
