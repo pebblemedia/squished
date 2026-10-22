@@ -46,13 +46,14 @@ const toDms = (deg: number): [number, number][] => {
   return [[d, 1], [m, 1], [s, 100]];
 };
 
-const blobToBinary = (blob: Blob) =>
-  new Promise<string>((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result as string);
-    r.onerror = rej;
-    r.readAsBinaryString(blob);
-  });
+const blobToBinary = async (blob: Blob) => {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let out = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    out += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return out;
+};
 
 /** Embed EXIF metadata into a JPEG blob. Non-JPEG blobs are returned unchanged. */
 export async function embedMeta(blob: Blob, meta?: ImageMeta): Promise<Blob> {
