@@ -144,10 +144,26 @@ export function FileDetailsDialog({ id }: { id: string }) {
                   <Input id="mcopy" value={meta.copyright ?? ""} onChange={set("copyright")} />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="mloc">Location name</Label>
-                <Input id="mloc" value={meta.location ?? ""} onChange={set("location")} placeholder="Boise, Idaho" />
+              <div className="grid grid-cols-[1fr_auto] items-end gap-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="mloc">Location name or address</Label>
+                  <Input id="mloc" value={meta.location ?? ""} onChange={set("location")} placeholder="Boise, Idaho" />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={geocodeLocation}
+                  disabled={geocoding || !(meta.location ?? "").trim()}
+                  aria-label="Find coordinates from this address"
+                  title="Find coordinates from this address"
+                >
+                  {geocoding ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+                </Button>
               </div>
+              {geoStatus && (
+                <p className="text-[11px] text-muted-foreground" role="status">{geoStatus}</p>
+              )}
               <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="mlat">Latitude</Label>
