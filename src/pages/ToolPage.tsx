@@ -1,3 +1,4 @@
+import { finalizeOutput } from "@/lib/metadata";
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import JSZip from "jszip";

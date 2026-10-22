@@ -1,3 +1,4 @@
+import { finalizeOutput } from "@/lib/metadata";
 import JSZip from "jszip";
 import { Link } from "react-router-dom";
 import { Download, Trash2, ArrowRight } from "lucide-react";
