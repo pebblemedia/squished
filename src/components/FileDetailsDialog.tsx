@@ -53,6 +53,34 @@ export function FileDetailsDialog({ id }: { id: string }) {
     );
   };
 
+  const geocodeLocation = async () => {
+    const q = (meta.location ?? "").trim();
+    if (!q || geocoding) return;
+    setGeocoding(true);
+    setGeoStatus(null);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(q)}`
+      );
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const rows = (await res.json()) as Array<{ lat: string; lon: string; display_name: string }>;
+      if (!rows.length) {
+        setGeoStatus("No match found for that address — try adding a city or country.");
+        return;
+      }
+      setMeta((m) => ({
+        ...m,
+        latitude: parseFloat(rows[0].lat).toFixed(6),
+        longitude: parseFloat(rows[0].lon).toFixed(6),
+      }));
+      setGeoStatus(`Found: ${rows[0].display_name}`);
+    } catch {
+      setGeoStatus("Couldn't reach the address lookup. Check your connection and try again.");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
   const save = () => {
     update(item.id, {
       customName: name.trim() && name.trim() !== baseName ? name.trim() : undefined,
