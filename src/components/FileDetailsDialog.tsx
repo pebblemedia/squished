@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Pencil } from "lucide-react";
+import { Loader2, MapPin, Pencil, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,8 @@ export function FileDetailsDialog({ id }: { id: string }) {
   const [name, setName] = useState("");
   const [meta, setMeta] = useState<ImageMeta>({});
   const [locating, setLocating] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geoStatus, setGeoStatus] = useState<string | null>(null);
 
   if (!item) return null;
   const isImg = item.kind === "image";
@@ -49,6 +51,34 @@ export function FileDetailsDialog({ id }: { id: string }) {
       },
       () => setLocating(false)
     );
+  };
+
+  const geocodeLocation = async () => {
+    const q = (meta.location ?? "").trim();
+    if (!q || geocoding) return;
+    setGeocoding(true);
+    setGeoStatus(null);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(q)}`
+      );
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const rows = (await res.json()) as Array<{ lat: string; lon: string; display_name: string }>;
+      if (!rows.length) {
+        setGeoStatus("No match found for that address — try adding a city or country.");
+        return;
+      }
+      setMeta((m) => ({
+        ...m,
+        latitude: parseFloat(rows[0].lat).toFixed(6),
+        longitude: parseFloat(rows[0].lon).toFixed(6),
+      }));
+      setGeoStatus(`Found: ${rows[0].display_name}`);
+    } catch {
+      setGeoStatus("Couldn't reach the address lookup. Check your connection and try again.");
+    } finally {
+      setGeocoding(false);
+    }
   };
 
   const save = () => {
@@ -114,10 +144,26 @@ export function FileDetailsDialog({ id }: { id: string }) {
                   <Input id="mcopy" value={meta.copyright ?? ""} onChange={set("copyright")} />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="mloc">Location name</Label>
-                <Input id="mloc" value={meta.location ?? ""} onChange={set("location")} placeholder="Boise, Idaho" />
+              <div className="grid grid-cols-[1fr_auto] items-end gap-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="mloc">Location name or address</Label>
+                  <Input id="mloc" value={meta.location ?? ""} onChange={set("location")} placeholder="Boise, Idaho" />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={geocodeLocation}
+                  disabled={geocoding || !(meta.location ?? "").trim()}
+                  aria-label="Find coordinates from this address"
+                  title="Find coordinates from this address"
+                >
+                  {geocoding ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+                </Button>
               </div>
+              {geoStatus && (
+                <p className="text-[11px] text-muted-foreground" role="status">{geoStatus}</p>
+              )}
               <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="mlat">Latitude</Label>
