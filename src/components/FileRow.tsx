@@ -6,6 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { useQueue } from "@/store/queue";
 import { formatBytes, type TargetFormat } from "@/lib/files";
 import { cn } from "@/lib/utils";
+import { finalizeOutput, finalName } from "@/lib/metadata";
+import { FileDetailsDialog } from "./FileDetailsDialog";
 
 export function FileRow({ id }: { id: string }) {
   const item = useQueue((s) => s.items.find((x) => x.id === id));
@@ -20,12 +22,13 @@ export function FileRow({ id }: { id: string }) {
       ? Math.round((1 - item.outputSize / item.originalSize) * 100)
       : null;
 
-  const download = () => {
-    if (!item.output || !item.outputName) return;
-    const url = URL.createObjectURL(item.output);
+  const download = async () => {
+    const out = await finalizeOutput(item);
+    if (!out) return;
+    const url = URL.createObjectURL(out.blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = item.outputName;
+    a.download = out.name;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -56,7 +59,7 @@ export function FileRow({ id }: { id: string }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{item.name}</p>
+              <p className="truncate text-sm font-medium">{item.customName ? finalName(item) : item.name}</p>
               <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                 <span>{formatBytes(item.originalSize)}</span>
                 {item.outputSize ? (
@@ -113,7 +116,7 @@ export function FileRow({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[140px_1fr_auto] sm:items-center">
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[140px_1fr_auto_auto] sm:items-center">
         <Select
           value={item.targetFormat}
           onValueChange={(v) => {
@@ -206,6 +209,7 @@ export function FileRow({ id }: { id: string }) {
           </div>
         )}
 
+        <FileDetailsDialog id={item.id} />
         <Button
           size="sm"
           onClick={download}
