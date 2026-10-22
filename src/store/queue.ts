@@ -16,7 +16,7 @@ interface QueueState {
   clear: () => void;
   updateOptions: (
     id: string,
-    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate">>
+    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate" | "customName" | "meta">>
   ) => void;
   process: (id: string) => Promise<void>;
   processAll: () => Promise<void>;

@@ -1,3 +1,4 @@
+import { finalizeOutput } from "@/lib/metadata";
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import JSZip from "jszip";
@@ -70,7 +71,8 @@ const ToolPage = () => {
     if (doneItems.length === 0) return;
     const zip = new JSZip();
     for (const it of doneItems) {
-      if (it.output && it.outputName) zip.file(it.outputName, it.output);
+      const out = await finalizeOutput(it);
+      if (out) zip.file(out.name, out.blob);
     }
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);

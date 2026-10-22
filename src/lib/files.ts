@@ -25,6 +25,8 @@ export interface QueueItem {
   quality: number;
   bitrate?: number;
   thumbnail?: string;
+  customName?: string;
+  meta?: import("./metadata").ImageMeta;
 }
 
 export const isImage = (file: File) => file.type.startsWith("image/");
