@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Pencil } from "lucide-react";
+import { Loader2, MapPin, Pencil, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,8 @@ export function FileDetailsDialog({ id }: { id: string }) {
   const [name, setName] = useState("");
   const [meta, setMeta] = useState<ImageMeta>({});
   const [locating, setLocating] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geoStatus, setGeoStatus] = useState<string | null>(null);
 
   if (!item) return null;
   const isImg = item.kind === "image";
