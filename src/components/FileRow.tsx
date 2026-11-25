@@ -8,6 +8,8 @@ import { formatBytes, type TargetFormat } from "@/lib/files";
 import { cn } from "@/lib/utils";
 import { finalizeOutput, finalName } from "@/lib/metadata";
 import { FileDetailsDialog } from "./FileDetailsDialog";
+import { FitPicker } from "./FitPicker";
+import { currentFit, fitFieldsFor, sizeLabel } from "@/lib/fit";
 
 export function FileRow({ id }: { id: string }) {
   const item = useQueue((s) => s.items.find((x) => x.id === id));
@@ -39,6 +41,9 @@ export function FileRow({ id }: { id: string }) {
   const isVideo = item.kind === "video";
   const isPdf = item.kind === "pdf";
   const isImg = item.kind === "image";
+  const fitting = !!(item.targetBytes || item.maxWidth || item.maxHeight);
+  const overLimit =
+    item.status === "done" && !!item.targetBytes && (item.outputSize ?? 0) > item.targetBytes;
 
   return (
     <div className="rounded-xl border bg-card p-3 shadow-soft sm:p-4">
@@ -107,6 +112,12 @@ export function FileRow({ id }: { id: string }) {
               )}
             </div>
           )}
+          {overLimit && (
+            <div className="mt-2 flex items-start gap-1.5 text-xs text-destructive">
+              <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+              <span>Still over {item.fitLabel ?? sizeLabel(item.targetBytes!)}. Try a smaller format or a bigger limit.</span>
+            </div>
+          )}
           {item.status === "error" && (
             <div className="mt-2 flex items-start gap-1.5 text-xs text-destructive">
               <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
@@ -162,56 +173,71 @@ export function FileRow({ id }: { id: string }) {
           </SelectContent>
         </Select>
 
-        {isAudio ? (
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Bitrate
-            </span>
-            <Select
-              value={String(item.bitrate ?? 128)}
-              onValueChange={(v) => {
-                update(item.id, { bitrate: Number(v) });
-                void reprocess(item.id);
-              }}
-            >
-              <SelectTrigger className="h-9 flex-1 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="16">16 kbps (tiny, mono speech)</SelectItem>
-                <SelectItem value="24">24 kbps</SelectItem>
-                <SelectItem value="32">32 kbps</SelectItem>
-                <SelectItem value="48">48 kbps</SelectItem>
-                <SelectItem value="64">64 kbps</SelectItem>
-                <SelectItem value="96">96 kbps</SelectItem>
-                <SelectItem value="128">128 kbps (recommended)</SelectItem>
-                <SelectItem value="192">192 kbps</SelectItem>
-                <SelectItem value="256">256 kbps</SelectItem>
-                <SelectItem value="320">320 kbps (best)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        ) : item.targetFormat === "strip" ? (
+        {item.targetFormat === "strip" ? (
           <p className="text-xs text-muted-foreground">
             Removes location, camera &amp; date info. No quality loss.
           </p>
         ) : (
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Quality
-            </span>
-            <Slider
-              value={[Math.round(item.quality * 100)]}
-              min={20}
-              max={100}
-              step={5}
-              onValueChange={([v]) => update(item.id, { quality: v / 100 })}
-              onValueCommit={() => void reprocess(item.id)}
-              className="flex-1"
+          <div className="flex min-w-0 items-center gap-2">
+            <FitPicker
+              className="w-[118px] shrink-0"
+              value={currentFit(item)}
+              kinds={[item.kind]}
+              onChange={(c) => {
+                update(item.id, fitFieldsFor(c, item.kind));
+                void reprocess(item.id);
+              }}
             />
-            <span className="w-8 text-right text-xs font-medium tabular-nums">
-              {Math.round(item.quality * 100)}
-            </span>
+            {fitting ? (
+              <span className="truncate text-xs text-muted-foreground">Best quality that fits</span>
+            ) : isAudio ? (
+              <div className="flex flex-1 items-center gap-2">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Bitrate
+                </span>
+                <Select
+                  value={String(item.bitrate ?? 128)}
+                  onValueChange={(v) => {
+                    update(item.id, { bitrate: Number(v) });
+                    void reprocess(item.id);
+                  }}
+                >
+                  <SelectTrigger className="h-9 flex-1 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="16">16 kbps (tiny, mono speech)</SelectItem>
+                    <SelectItem value="24">24 kbps</SelectItem>
+                    <SelectItem value="32">32 kbps</SelectItem>
+                    <SelectItem value="48">48 kbps</SelectItem>
+                    <SelectItem value="64">64 kbps</SelectItem>
+                    <SelectItem value="96">96 kbps</SelectItem>
+                    <SelectItem value="128">128 kbps (recommended)</SelectItem>
+                    <SelectItem value="192">192 kbps</SelectItem>
+                    <SelectItem value="256">256 kbps</SelectItem>
+                    <SelectItem value="320">320 kbps (best)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="flex flex-1 items-center gap-2">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Quality
+                </span>
+                <Slider
+                  value={[Math.round(item.quality * 100)]}
+                  min={20}
+                  max={100}
+                  step={5}
+                  onValueChange={([v]) => update(item.id, { quality: v / 100 })}
+                  onValueCommit={() => void reprocess(item.id)}
+                  className="flex-1"
+                />
+                <span className="w-8 text-right text-xs font-medium tabular-nums">
+                  {Math.round(item.quality * 100)}
+                </span>
+              </div>
+            )}
           </div>
         )}
 

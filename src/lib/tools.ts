@@ -1,7 +1,9 @@
 import type { TargetFormat } from "./files";
+import type { FitChoice } from "./fit";
+import { FIT_TOOLS } from "./fit-tools";
 
-export type ToolCategory = "audio" | "video" | "image" | "pdf";
-export type ToolKind = "compress" | "convert";
+export type ToolCategory = "audio" | "video" | "image" | "pdf" | "fit";
+export type ToolKind = "compress" | "convert" | "fit";
 
 export interface FaqEntry {
   q: string;
@@ -30,6 +32,10 @@ export interface Tool {
   faq: FaqEntry[];
   /** Slugs of related tools (for internal linking). */
   related: string[];
+  /** Size limit new files get on this page ("make it fit" pages). */
+  fit?: FitChoice;
+  /** Drop zone heading; defaults to "Drop your <EXT> <kind>". */
+  dropTitle?: string;
 }
 
 const PRIVACY_FAQ: FaqEntry = {
@@ -312,6 +318,7 @@ export const TOOLS: Tool[] = [
     category: "image",
     inputExt: ["jpg", "jpeg", "png", "webp", "heic", "heif"],
     targetFormat: "strip",
+    dropTitle: "Drop your photos",
     label: "Remove photo location",
     title: "Remove EXIF & Location From Photos — Free, Private | Squished",
     h1: "Remove location and EXIF data from photos",
@@ -538,6 +545,8 @@ export const TOOLS: Tool[] = [
     faq: [PRIVACY_FAQ, FREE_FAQ, SIZE_FAQ],
     related: ["convert-jpg-to-pdf", "convert-png-to-pdf", "compress-pdf"],
   },
+
+  ...FIT_TOOLS,
 ];
 
 export const TOOLS_BY_SLUG: Record<string, Tool> = Object.fromEntries(

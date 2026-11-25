@@ -19,7 +19,7 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
     format: "es",
   },
   optimizeDeps: {
-    exclude: ["@jsquash/jpeg", "@jsquash/webp", "@jsquash/avif", "@jsquash/oxipng"],
+    exclude: ["@jsquash/jpeg", "@jsquash/webp", "@jsquash/avif", "@jsquash/oxipng", "@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },
   resolve: {
     alias: {

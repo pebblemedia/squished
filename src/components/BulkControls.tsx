@@ -3,7 +3,9 @@ import { Layers } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useQueue } from "@/store/queue";
-import type { TargetFormat } from "@/lib/files";
+import type { FileKind, TargetFormat } from "@/lib/files";
+import type { FitChoice } from "@/lib/fit";
+import { FitPicker } from "./FitPicker";
 
 /**
  * "Apply to all" bar — lets the user change the target format and quality
@@ -23,6 +25,7 @@ export function BulkControls() {
   const [format, setFormat] = useState<string>("");
   const [quality, setQuality] = useState(75);
   const [bitrate, setBitrate] = useState(128);
+  const [fit, setFit] = useState<FitChoice>({ type: "none" });
 
   if (items.length < 2) return null;
 
@@ -34,6 +37,13 @@ export function BulkControls() {
   const commitQuality = ([v]: number[]) => {
     applyToAll({ quality: v / 100 });
   };
+
+  const applyFit = (c: FitChoice) => {
+    setFit(c);
+    applyToAll({ fit: c });
+  };
+
+  const kinds = [...new Set(items.map((i) => i.kind))] as FileKind[];
 
   const applyBitrate = (v: string) => {
     const b = Number(v);
@@ -47,7 +57,7 @@ export function BulkControls() {
         <Layers className="size-3.5" />
         Apply to all {items.length} files
       </div>
-      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[150px_1fr] sm:items-center">
+      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[150px_150px_1fr] sm:items-center">
         <Select value={format} onValueChange={applyFormat}>
           <SelectTrigger className="h-9 text-xs">
             <SelectValue placeholder="Set format…" />
@@ -87,6 +97,8 @@ export function BulkControls() {
             )}
           </SelectContent>
         </Select>
+
+        <FitPicker value={fit} kinds={kinds} onChange={applyFit} placeholder="Fit all for…" />
 
         {onlyAudio ? (
           <div className="flex items-center gap-2">

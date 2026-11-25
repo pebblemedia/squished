@@ -6,6 +6,7 @@ import { Download, Trash2 } from "lucide-react";
 import { DropZone } from "@/components/DropZone";
 import { FileRow } from "@/components/FileRow";
 import { BulkControls } from "@/components/BulkControls";
+import { ShareReceipt } from "@/components/ShareReceipt";
 import { QueueAgentTools } from "@/components/QueueAgentTools";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -87,7 +88,7 @@ const ToolPage = () => {
   };
 
   const handleFiles = (files: FileList | File[]) => {
-    addFiles(files, { targetFormat: tool.targetFormat });
+    addFiles(files, { targetFormat: tool.targetFormat, fit: tool.fit });
   };
 
   return (
@@ -120,7 +121,7 @@ const ToolPage = () => {
           <DropZone
             onFiles={handleFiles}
             accept={acceptString(tool)}
-            title={tool.targetFormat === "strip" ? "Drop your photos" : `Drop your ${tool.inputExt[0].toUpperCase()} ${
+            title={tool.dropTitle ?? `Drop your ${tool.inputExt[0].toUpperCase()} ${
               tool.category === "image" ? "images" : tool.category === "video" ? "videos" : "files"
             }`}
             hint={`${tool.inputExt.map((e) => `.${e}`).join(", ")} — processed entirely in your browser`}
@@ -147,6 +148,7 @@ const ToolPage = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <ShareReceipt />
                 <Button variant="ghost" size="sm" onClick={clear} className="text-muted-foreground">
                   <Trash2 className="size-4" /> Clear
                 </Button>

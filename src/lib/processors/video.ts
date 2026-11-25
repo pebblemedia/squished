@@ -2,6 +2,7 @@ import { fetchFile } from "@ffmpeg/util";
 import type { QueueItem } from "../files";
 import { replaceExt } from "../files";
 import { getFFmpeg } from "./audio";
+import { probeDuration, videoPlanFor, type VideoPlan } from "./media-fit";
 
 export function isVideo(file: File) {
   if (file.type.startsWith("video/")) return true;
@@ -49,41 +50,63 @@ export async function compressVideo(
   const target = targetFor[targetKey];
   const outName = `out_${item.id}.${target.ext}`;
   const crf = qualityToCrf(item.quality);
+  const sameFormat =
+    (item.targetFormat === "original" && sourceExt === target.ext) ||
+    item.targetFormat === sourceExt;
+
+  // "Fit for": already under the limit in the right format — nothing to do.
+  if (item.targetBytes && sameFormat && item.file.size <= item.targetBytes) {
+    onProgress(100);
+    return { blob: item.file, name: item.name };
+  }
 
   const progressHandler = ({ progress }: { progress: number }) => {
     const pct = 10 + Math.max(0, Math.min(1, progress)) * 90;
     onProgress(pct);
   };
-  ff.on("progress", progressHandler);
 
-  try {
-    onProgress(11);
-    await ff.writeFile(inputName, await fetchFile(item.file));
-
-    const args = [
-      "-i", inputName,
-      ...target.videoCodec,
-      "-crf", String(crf),
-      ...target.audioCodec,
-      outName,
-    ];
-    await ff.exec(args);
-
+  const encode = async (plan?: VideoPlan) => {
+    const rate = plan
+      ? [
+          "-b:v", `${plan.videoKbps}k`,
+          "-maxrate", `${Math.round(plan.videoKbps * 1.3)}k`,
+          "-bufsize", `${plan.videoKbps * 2}k`,
+          "-vf", `scale=-2:'min(${plan.maxHeight},ih)'`,
+        ]
+      : ["-crf", String(crf)];
+    const audio = plan
+      ? [target.audioCodec[0], target.audioCodec[1], "-b:a", `${plan.audioKbps}k`]
+      : target.audioCodec;
+    await ff.exec(["-i", inputName, ...target.videoCodec, ...rate, ...audio, "-y", outName]);
     const data = (await ff.readFile(outName)) as Uint8Array;
     const buf = data.buffer.slice(
       data.byteOffset,
       data.byteOffset + data.byteLength
     ) as ArrayBuffer;
-    let blob = new Blob([buf], { type: target.mime });
+    return new Blob([buf], { type: target.mime });
+  };
+
+  try {
+    onProgress(11);
+    await ff.writeFile(inputName, await fetchFile(item.file));
+
+    let plan: VideoPlan | undefined;
+    if (item.targetBytes) plan = videoPlanFor(item.targetBytes, await probeDuration(ff, inputName));
+
+    ff.on("progress", progressHandler);
+    let blob = await encode(plan);
+    // Bitrate targeting isn't exact; one corrective pass if we overshot.
+    if (plan && item.targetBytes && blob.size > item.targetBytes) {
+      const factor = (item.targetBytes / blob.size) * 0.92;
+      plan = { ...plan, videoKbps: Math.max(50, Math.floor(plan.videoKbps * factor)) };
+      blob = await encode(plan);
+    }
     let outputName = replaceExt(item.name, target.ext);
 
     try { await ff.deleteFile(inputName); } catch { /* ignore */ }
     try { await ff.deleteFile(outName); } catch { /* ignore */ }
 
     // If we re-encoded into the same format and ended up bigger, keep original.
-    const sameFormat =
-      (item.targetFormat === "original" && sourceExt === target.ext) ||
-      item.targetFormat === sourceExt;
     if (sameFormat && blob.size > item.file.size) {
       blob = new Blob([await item.file.arrayBuffer()], {
         type: item.file.type || target.mime,

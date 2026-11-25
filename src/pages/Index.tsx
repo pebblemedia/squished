@@ -5,6 +5,7 @@ import { Download, Trash2, ArrowRight } from "lucide-react";
 import { DropZone } from "@/components/DropZone";
 import { FileRow } from "@/components/FileRow";
 import { BulkControls } from "@/components/BulkControls";
+import { ShareReceipt } from "@/components/ShareReceipt";
 import { QueueAgentTools } from "@/components/QueueAgentTools";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -105,6 +106,7 @@ const Index = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                <ShareReceipt />
                 <Button
                   variant="ghost"
                   size="sm"

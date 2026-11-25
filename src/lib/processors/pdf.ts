@@ -9,15 +9,57 @@ pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 
 
+/** Rasterise every page to JPEG and rebuild the PDF. `q` drives render scale + JPEG quality. */
+async function rasterizePdf(
+  originalBytes: Uint8Array,
+  q: number,
+  onProgress: (p: number) => void
+): Promise<Uint8Array> {
+  const scale = Math.max(0.4, 0.7 + q * 1.4); // 0.7 .. 2.1 DPI scale (lower in fit mode)
+  const jpegQ = Math.max(0.2, 0.35 + q * 0.5); // 0.35 .. 0.85
+  const srcDoc = await pdfjs.getDocument({ data: originalBytes.slice(0) }).promise;
+  const out = await PDFDocument.create();
+  for (let i = 1; i <= srcDoc.numPages; i++) {
+    const page = await srcDoc.getPage(i);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport, canvas } as unknown as Parameters<typeof page.render>[0]).promise;
+    const jpgBlob: Blob = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b!), "image/jpeg", jpegQ)
+    );
+    const jpgBytes = new Uint8Array(await jpgBlob.arrayBuffer());
+    const img = await out.embedJpg(jpgBytes);
+    const orig = page.getViewport({ scale: 1 });
+    const pdfPage = out.addPage([orig.width, orig.height]);
+    pdfPage.drawImage(img, { x: 0, y: 0, width: orig.width, height: orig.height });
+    onProgress(i / srcDoc.numPages);
+  }
+  await srcDoc.destroy();
+  return out.save({ useObjectStreams: true });
+}
+
 /** Compress a PDF by rasterising each page to a JPEG and rebuilding the PDF.
  *  Tries multiple strategies and returns the smallest. If nothing beats the
- *  original, returns the original bytes untouched. */
+ *  original, returns the original bytes untouched. In "fit" mode, searches for
+ *  the sharpest version under the size limit. */
 export async function compressPdf(
   item: QueueItem,
   onProgress: (p: number) => void
 ): Promise<{ blob: Blob; name: string }> {
   const originalBytes = new Uint8Array(await item.file.arrayBuffer());
   const originalSize = originalBytes.byteLength;
+  const done = (bytes: Uint8Array) => {
+    onProgress(100);
+    return {
+      blob: new Blob([bytes as BlobPart], { type: "application/pdf" }),
+      name: replaceExt(item.name, "pdf"),
+    };
+  };
 
   // Strategy A: pdf-lib resave with object streams (lossless, helps vector PDFs)
   let bestBytes: Uint8Array = originalBytes;
@@ -34,37 +76,28 @@ export async function compressPdf(
   }
   onProgress(15);
 
+  const limit = item.targetBytes;
+  if (limit) {
+    // Lossless already fits? Keep text selectable and sharp.
+    if (bestSize <= limit) return done(bestBytes);
+    let lo = -0.2;
+    let hi = 1;
+    let best: Uint8Array | undefined;
+    const steps = 5;
+    for (let i = 0; i < steps; i++) {
+      const q = i === 0 ? lo : (lo + hi) / 2;
+      const base = 15 + (i / steps) * 80;
+      const bytes = await rasterizePdf(originalBytes, q, (f) => onProgress(base + (f * 80) / steps));
+      if (bytes.byteLength <= limit) { best = bytes; lo = q; } else if (i === 0) { break; } else { hi = q; }
+    }
+    if (best) return done(best);
+    throw new Error("Couldn't get this PDF under the size limit. Try a bigger limit or fewer pages.");
+  }
+
   // Strategy B: rasterize pages to JPEG. Only worthwhile when there's enough
   // image content to compress. Quality controls render scale + JPEG quality.
-  const q = item.quality; // 0..1
-  const scale = 0.7 + q * 1.4; // 0.7 .. 2.1 DPI scale
-  const jpegQ = 0.35 + q * 0.5; // 0.35 .. 0.85
-
   try {
-    const srcDoc = await pdfjs.getDocument({ data: originalBytes.slice(0) }).promise;
-    const out = await PDFDocument.create();
-    for (let i = 1; i <= srcDoc.numPages; i++) {
-      const page = await srcDoc.getPage(i);
-      const viewport = page.getViewport({ scale });
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
-      const ctx = canvas.getContext("2d")!;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      await page.render({ canvasContext: ctx, viewport, canvas } as unknown as Parameters<typeof page.render>[0]).promise;
-      const jpgBlob: Blob = await new Promise((resolve) =>
-        canvas.toBlob((b) => resolve(b!), "image/jpeg", jpegQ)
-      );
-      const jpgBytes = new Uint8Array(await jpgBlob.arrayBuffer());
-      const img = await out.embedJpg(jpgBytes);
-      const orig = page.getViewport({ scale: 1 });
-      const pdfPage = out.addPage([orig.width, orig.height]);
-      pdfPage.drawImage(img, { x: 0, y: 0, width: orig.width, height: orig.height });
-      onProgress(15 + (i / srcDoc.numPages) * 80);
-    }
-    await srcDoc.destroy();
-    const rasterized = await out.save({ useObjectStreams: true });
+    const rasterized = await rasterizePdf(originalBytes, item.quality, (f) => onProgress(15 + f * 80));
     if (rasterized.byteLength < bestSize) {
       bestBytes = rasterized;
       bestSize = rasterized.byteLength;
@@ -73,11 +106,7 @@ export async function compressPdf(
     /* ignore */
   }
 
-  onProgress(100);
-  return {
-    blob: new Blob([bestBytes as BlobPart], { type: "application/pdf" }),
-    name: replaceExt(item.name, "pdf"),
-  };
+  return done(bestBytes);
 }
 
 /** Convert a PDF to a ZIP of images (jpg or png). */

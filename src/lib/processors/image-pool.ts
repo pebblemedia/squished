@@ -6,10 +6,17 @@ interface Pending {
   onProgress: (p: number) => void;
 }
 
+export interface FitOptions {
+  fitBytes?: number;
+  maxWidth?: number;
+  maxHeight?: number;
+}
+
 interface Job {
   blob: Blob;
   target: WorkerTarget;
   quality: number;
+  fit?: FitOptions;
   pending: Pending;
 }
 
@@ -68,7 +75,7 @@ function pump() {
     const id = nextId++;
     inflight.set(id, job.pending);
     busy.set(w, id);
-    w.postMessage({ id, blob: job.blob, target: job.target, quality: job.quality, maxPixels: maxPixels() });
+    w.postMessage({ id, blob: job.blob, target: job.target, quality: job.quality, maxPixels: maxPixels(), ...job.fit });
   }
 }
 
@@ -76,13 +83,14 @@ export function encodeInWorker(
   blob: Blob,
   target: WorkerTarget,
   quality: number,
-  onProgress: (p: number) => void
+  onProgress: (p: number) => void,
+  fit?: FitOptions
 ): Promise<{ buffer: ArrayBuffer; resized: boolean }> {
   if (typeof Worker === "undefined" || typeof OffscreenCanvas === "undefined") {
     return Promise.reject(new Error("Workers unavailable"));
   }
   return new Promise((resolve, reject) => {
-    queue.push({ blob, target, quality, pending: { resolve, reject, onProgress } });
+    queue.push({ blob, target, quality, fit, pending: { resolve, reject, onProgress } });
     pump();
   });
 }

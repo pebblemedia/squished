@@ -2,6 +2,7 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import type { QueueItem } from "../files";
 import { replaceExt } from "../files";
+import { audioKbpsFor, probeDuration } from "./media-fit";
 
 // Single-threaded ESM build — served from CDN (the wasm is ~32 MB and
 // Lovable's hosting layer times out (524) serving large static assets).
@@ -108,52 +109,69 @@ export async function compressAudio(
       : "mp3";
   const target = targetExtFor[targetKey] ?? targetExtFor.mp3;
   const outName = `out_${item.id}.${target.ext}`;
-  const bitrate = item.bitrate ?? 128;
+  const mime =
+    target.ext === "mp3" ? "audio/mpeg"
+    : target.ext === "m4a" ? "audio/mp4"
+    : target.ext === "wav" ? "audio/wav"
+    : "audio/ogg";
+  const sourceExt = (item.name.split(".").pop() ?? "").toLowerCase();
+  const sameFormat =
+    (item.targetFormat === "original" && sourceExt === target.ext) ||
+    item.targetFormat === sourceExt;
+
+  // "Fit for": already under the limit in the right format — nothing to do.
+  if (item.targetBytes && sameFormat && item.file.size <= item.targetBytes) {
+    onProgress(100);
+    return { blob: item.file, name: item.name };
+  }
 
   const progressHandler = ({ progress }: { progress: number }) => {
     const pct = 20 + Math.max(0, Math.min(1, progress)) * 80;
     onProgress(pct);
   };
-  ff.on("progress", progressHandler);
 
-  try {
-    await ff.writeFile(inputName, await fetchFile(item.file));
-
+  const encode = async (bitrate: number) => {
     // Low bitrates require mono + a lower sample rate or the encoder will
     // refuse / produce garbage (libmp3lame minimums depend on sample rate).
     const lowBitrate = bitrate <= 48;
     const veryLow = bitrate <= 24;
-    const args = [
+    await ff.exec([
       "-i", inputName,
       ...target.codec,
       ...(target.ext === "wav" ? [] : ["-b:a", `${bitrate}k`]),
       ...(lowBitrate ? ["-ac", "1"] : []),
       ...(veryLow ? ["-ar", "22050"] : lowBitrate ? ["-ar", "32000"] : []),
-      outName,
-    ];
-    await ff.exec(args);
-
+      "-y", outName,
+    ]);
     const data = (await ff.readFile(outName)) as Uint8Array;
     const buf = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
-    const mime =
-      target.ext === "mp3" ? "audio/mpeg"
-      : target.ext === "m4a" ? "audio/mp4"
-      : target.ext === "wav" ? "audio/wav"
-      : "audio/ogg";
-    let blob = new Blob([buf], { type: mime });
+    return new Blob([buf], { type: mime });
+  };
+
+  try {
+    await ff.writeFile(inputName, await fetchFile(item.file));
+
+    let bitrate = item.bitrate ?? 128;
+    if (item.targetBytes && target.ext !== "wav") {
+      const seconds = await probeDuration(ff, inputName);
+      bitrate = Math.max(8, Math.min(192, audioKbpsFor(item.targetBytes, seconds)));
+    }
+
+    ff.on("progress", progressHandler);
+    let blob = await encode(bitrate);
+    if (item.targetBytes && blob.size > item.targetBytes && target.ext !== "wav" && bitrate > 8) {
+      bitrate = Math.max(8, Math.floor(bitrate * (item.targetBytes / blob.size) * 0.95));
+      blob = await encode(bitrate);
+    }
     let outputName = replaceExt(item.name, target.ext);
 
     // cleanup
-    try { await ff.deleteFile(inputName); } catch {}
-    try { await ff.deleteFile(outName); } catch {}
+    try { await ff.deleteFile(inputName); } catch { /* ignore */ }
+    try { await ff.deleteFile(outName); } catch { /* ignore */ }
 
     // If re-encoding made the file bigger (source was already at a lower
     // bitrate than the chosen target), keep the original — it's smaller and
     // hasn't been re-compressed lossily.
-    const sourceExt = (item.name.split(".").pop() ?? "").toLowerCase();
-    const sameFormat =
-      (item.targetFormat === "original" && sourceExt === target.ext) ||
-      item.targetFormat === sourceExt;
     if (sameFormat && blob.size > item.file.size) {
       console.log("[ffmpeg] output larger than source, keeping original");
       blob = new Blob([await item.file.arrayBuffer()], { type: item.file.type || mime });
