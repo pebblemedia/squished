@@ -18,7 +18,6 @@ import { MODEL_DOWNLOAD_MB } from "../api/caption";
 import { useAutopilot } from "../hooks/use-autopilot";
 import { ProfileForm } from "./profile-form";
 import { CsvImport } from "./csv-import";
-import { PorterProCta } from "./porter-pro-cta";
 
 type Patches = { id: string; fields: SeoPatch }[];
 
@@ -96,7 +95,6 @@ export function LocalSeoDialog() {
               <p>{done} photo{done === 1 ? "" : "s"} updated. Download as usual; the details are written into each JPEG.</p>
             </div>
             {error && <p role="status" className="text-xs text-muted-foreground">{error}</p>}
-            <PorterProCta />
             <DialogFooter><Button onClick={() => setOpen(false)}>Done</Button></DialogFooter>
           </div>
         ) : (
