@@ -305,6 +305,33 @@ export const TOOLS: Tool[] = [
   imageConvert("jpg", "webp", "JPG", "WebP", "webp", ["convert-webp-to-jpg", "convert-jpg-to-png", "compress-jpg"]),
   imageConvert("webp", "jpg", "WebP", "JPG", "jpeg", ["convert-jpg-to-webp", "convert-webp-to-png", "compress-webp"]),
 
+  // ---- Privacy ----
+  {
+    slug: "remove-exif",
+    kind: "compress",
+    category: "image",
+    inputExt: ["jpg", "jpeg", "png", "webp", "heic", "heif"],
+    targetFormat: "strip",
+    label: "Remove photo location",
+    title: "Remove EXIF & Location From Photos — Free, Private | Squished",
+    h1: "Remove location and EXIF data from photos",
+    description: "Strip GPS location, camera details and dates from photos before you post. No quality loss, no upload — runs on your device.",
+    intro: "Photos can carry the exact spot they were taken. Drop them here and Squished removes that hidden data without re-compressing — your photos never leave your device.",
+    faq: [
+      PRIVACY_FAQ,
+      {
+        q: "What gets removed?",
+        a: "GPS location, camera make and serial, date taken, editing software, comments, and XMP/IPTC tags. Colour profiles and orientation are kept so the photo looks the same.",
+      },
+      {
+        q: "Will the photo lose quality?",
+        a: "No. For JPG, PNG and WebP, Squished removes the metadata without re-encoding the image. iPhone HEIC photos are converted to a high-quality JPG.",
+      },
+      FREE_FAQ,
+    ],
+    related: ["compress-jpg", "convert-heic-to-jpg", "compress-png"],
+  },
+
   // ---- HEIC (iPhone photo) convert ----
   {
     slug: "convert-heic-to-jpg",

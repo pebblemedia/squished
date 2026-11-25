@@ -175,7 +175,7 @@ export const useQueue = create<QueueState>((set, get) => ({
         if (patch.targetFormat) {
           const f = patch.targetFormat;
           const ok =
-            (x.kind === "image" && ["original", "jpeg", "png", "webp", "pdf"].includes(f)) ||
+            (x.kind === "image" && ["original", "jpeg", "png", "webp", "avif", "strip", "pdf"].includes(f)) ||
             (x.kind === "audio" && ["original", "mp3", "m4a", "ogg", "wav"].includes(f)) ||
             (x.kind === "video" && ["original", "mp4", "webm"].includes(f)) ||
             (x.kind === "pdf" && ["pdf", "pdf-to-jpg", "pdf-to-png"].includes(f));
