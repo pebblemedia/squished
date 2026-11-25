@@ -34,7 +34,12 @@ export function SiteFooter() {
           ))}
         </div>
         <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} Squished</span>
+          <span>
+            © {new Date().getFullYear()} Squished · Made by{" "}
+            <a href="https://porterpromedia.com/?utm_source=squished&utm_medium=referral&utm_campaign=footer" target="_blank" rel="noopener" className="underline-offset-2 hover:text-foreground hover:underline">
+              Porter Pro Media
+            </a>
+          </span>
           <span>
             <Link to="/tools" className="hover:text-foreground">All tools</Link>
             {" · "}<Link to="/limits" className="hover:text-foreground">Upload limits</Link>
