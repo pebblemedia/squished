@@ -59,7 +59,9 @@ export function BulkControls() {
                 <SelectItem value="jpeg">All to JPEG</SelectItem>
                 <SelectItem value="png">All to PNG</SelectItem>
                 <SelectItem value="webp">All to WebP</SelectItem>
+                <SelectItem value="avif">All to AVIF</SelectItem>
                 <SelectItem value="pdf">All to PDF</SelectItem>
+                <SelectItem value="strip">Remove metadata (images)</SelectItem>
               </>
             )}
             {hasAudio && (

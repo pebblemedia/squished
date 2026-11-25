@@ -154,7 +154,9 @@ export function FileRow({ id }: { id: string }) {
                 <SelectItem value="jpeg">JPEG</SelectItem>
                 <SelectItem value="png">PNG</SelectItem>
                 <SelectItem value="webp">WebP</SelectItem>
+                <SelectItem value="avif">AVIF</SelectItem>
                 <SelectItem value="pdf">PDF</SelectItem>
+                <SelectItem value="strip">Strip metadata</SelectItem>
               </>
             ) : null}
           </SelectContent>
@@ -189,6 +191,10 @@ export function FileRow({ id }: { id: string }) {
               </SelectContent>
             </Select>
           </div>
+        ) : item.targetFormat === "strip" ? (
+          <p className="text-xs text-muted-foreground">
+            Removes location, camera &amp; date info. No quality loss.
+          </p>
         ) : (
           <div className="flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">

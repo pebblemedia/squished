@@ -3,7 +3,8 @@ export type FileStatus = "queued" | "processing" | "done" | "error";
 export type FileKind = "image" | "audio" | "video" | "pdf" | "other";
 
 export type TargetFormat =
-  | "jpeg" | "png" | "webp"
+  | "jpeg" | "png" | "webp" | "avif"
+  | "strip"
   | "mp3" | "m4a" | "wav" | "ogg"
   | "mp4" | "webm"
   | "pdf" | "pdf-to-jpg" | "pdf-to-png"

@@ -120,7 +120,7 @@ const ToolPage = () => {
           <DropZone
             onFiles={handleFiles}
             accept={acceptString(tool)}
-            title={`Drop your ${tool.inputExt[0].toUpperCase()} ${
+            title={tool.targetFormat === "strip" ? "Drop your photos" : `Drop your ${tool.inputExt[0].toUpperCase()} ${
               tool.category === "image" ? "images" : tool.category === "video" ? "videos" : "files"
             }`}
             hint={`${tool.inputExt.map((e) => `.${e}`).join(", ")} — processed entirely in your browser`}

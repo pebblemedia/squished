@@ -15,6 +15,12 @@ export default defineConfig(({ mode, isSsrBuild }) => ({
     },
   },
   plugins: [react(), sitemapPlugin(), mcpPlugin(), mode === "development" && !isSsrBuild && componentTagger()].filter(Boolean),
+  worker: {
+    format: "es",
+  },
+  optimizeDeps: {
+    exclude: ["@jsquash/jpeg", "@jsquash/webp", "@jsquash/avif", "@jsquash/oxipng"],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

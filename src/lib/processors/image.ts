@@ -1,18 +1,26 @@
 import imageCompression from "browser-image-compression";
 import type { QueueItem, TargetFormat } from "../files";
 import { isHeic, replaceExt } from "../files";
+import { stripMetadata } from "../strip-metadata";
+import { encodeInWorker } from "./image-pool";
+import type { EncodeTarget } from "./image-worker";
 
-const mimeFor: Partial<Record<Exclude<TargetFormat, "original">, string>> = {
+const mimeFor: Record<EncodeTarget, string> = {
   jpeg: "image/jpeg",
   png: "image/png",
   webp: "image/webp",
+  avif: "image/avif",
 };
 
-const extFor: Partial<Record<Exclude<TargetFormat, "original">, string>> = {
+const extFor: Record<EncodeTarget, string> = {
   jpeg: "jpg",
   png: "png",
   webp: "webp",
+  avif: "avif",
 };
+
+const targetForMime = (mime: string): EncodeTarget | undefined =>
+  (Object.keys(mimeFor) as EncodeTarget[]).find((t) => mimeFor[t] === mime);
 
 async function decodeHeic(file: File, toMime: "image/jpeg" | "image/png", quality: number): Promise<File> {
   const { heicTo } = await import("heic-to");
@@ -29,21 +37,81 @@ export async function compressImage(
   item: QueueItem,
   onProgress: (p: number) => void
 ): Promise<{ blob: Blob; name: string }> {
-  // HEIC needs to be decoded first because the browser can't render it.
+  const heic = isHeic(item.file);
   let source: File = item.file;
-  if (isHeic(item.file)) {
+  if (heic) {
     onProgress(5);
-    // If the user wants PNG, decode to PNG to preserve quality. Otherwise decode to JPEG.
-    const decodeMime = item.targetFormat === "png" ? "image/png" : "image/jpeg";
-    source = await decodeHeic(item.file, decodeMime, Math.max(item.quality, 0.92));
+    // Decode losslessly so the final encode is the only lossy step.
+    source = await decodeHeic(item.file, "image/png", 1);
   }
 
-  // If target is "original" and the source is HEIC, fall back to JPEG (browsers can't write HEIC).
-  const effectiveTarget: TargetFormat =
-    item.targetFormat === "original" && isHeic(item.file) ? "jpeg" : item.targetFormat;
+  if (item.targetFormat === "strip") {
+    if (heic) return encodeOrFallback(item, source, "jpeg", Math.max(item.quality, 0.92), onProgress);
+    const cleaned = await stripMetadata(source);
+    if (!cleaned) throw new Error("This format can't be cleaned without converting. Pick JPEG, PNG or WebP instead.");
+    onProgress(100);
+    return { blob: cleaned, name: item.name };
+  }
 
-  const targetMime =
-    effectiveTarget === "original" ? source.type : mimeFor[effectiveTarget];
+  // HEIC can't be written by browsers, so "keep format" falls back to JPEG.
+  const target: EncodeTarget | undefined =
+    item.targetFormat === "original"
+      ? heic ? "jpeg" : targetForMime(source.type)
+      : (item.targetFormat as EncodeTarget);
+
+  if (!target) return legacyCompress(item, source, item.targetFormat, onProgress);
+  if (target === "png") return compressPng(item, source, onProgress);
+  return encodeOrFallback(item, source, target, item.quality, onProgress);
+}
+
+async function encodeOrFallback(
+  item: QueueItem,
+  source: File,
+  target: EncodeTarget,
+  quality: number,
+  onProgress: (p: number) => void
+): Promise<{ blob: Blob; name: string }> {
+  try {
+    const { buffer, resized } = await encodeInWorker(source, target, quality, onProgress);
+    let blob = new Blob([buffer], { type: mimeFor[target] });
+    // Never hand back a bigger file when the format is unchanged — just clean the original.
+    if (!resized && source.type === mimeFor[target] && blob.size >= source.size) {
+      const cleaned = await stripMetadata(source);
+      if (cleaned && cleaned.size < blob.size) blob = cleaned;
+    }
+    return { blob, name: replaceExt(item.name, extFor[target]) };
+  } catch (err) {
+    console.warn("[squished] fast image engine unavailable, using fallback:", err);
+    return legacyCompress(item, source, target, onProgress);
+  }
+}
+
+/** Lossy colour reduction (existing engine) followed by lossless OxiPNG; keeps the smaller. */
+async function compressPng(
+  item: QueueItem,
+  source: File,
+  onProgress: (p: number) => void
+): Promise<{ blob: Blob; name: string }> {
+  const reduced = await legacyCompress(item, source, "png", (p) => onProgress(p * 0.6));
+  try {
+    const { buffer } = await encodeInWorker(reduced.blob, "png-optimise", item.quality, () => onProgress(80));
+    if (buffer.byteLength < reduced.blob.size) return { ...reduced, blob: new Blob([buffer], { type: "image/png" }) };
+  } catch (err) {
+    console.warn("[squished] PNG optimiser unavailable:", err);
+  }
+  return reduced;
+}
+
+/** Original canvas-based path, kept as a fallback for older browsers and odd formats. */
+async function legacyCompress(
+  item: QueueItem,
+  source: File,
+  target: TargetFormat,
+  onProgress: (p: number) => void
+): Promise<{ blob: Blob; name: string }> {
+  if (target === "avif") throw new Error("AVIF needs a newer browser. Try WebP instead.");
+  const effective = target === "original" && isHeic(item.file) ? "jpeg" : target;
+  const targetMime = effective === "original" ? source.type : mimeFor[effective as EncodeTarget];
 
   const result = await imageCompression(source, {
     maxSizeMB: 50,
@@ -55,11 +123,11 @@ export async function compressImage(
   });
 
   const ext =
-    effectiveTarget === "original"
+    effective === "original"
       ? (source.name.split(".").pop() ?? "img")
-      : extFor[effectiveTarget];
+      : extFor[effective as EncodeTarget];
 
-  return { blob: result, name: replaceExt(item.name, ext!) };
+  return { blob: result, name: replaceExt(item.name, ext) };
 }
 
 export async function makeThumbnail(file: File): Promise<string | undefined> {
