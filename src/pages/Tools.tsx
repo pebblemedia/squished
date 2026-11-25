@@ -6,6 +6,7 @@ import { Seo, canonicalFor } from "@/components/seo/Seo";
 import { TOOLS, type ToolCategory } from "@/lib/tools";
 
 const CATEGORY_LABELS: Record<ToolCategory, string> = {
+  fit: "Make it fit",
   pdf: "PDF",
   image: "Image",
   audio: "Audio",
@@ -14,6 +15,7 @@ const CATEGORY_LABELS: Record<ToolCategory, string> = {
 
 const Tools = () => {
   const grouped: Record<ToolCategory, typeof TOOLS> = {
+    fit: TOOLS.filter((t) => t.category === "fit"),
     pdf: TOOLS.filter((t) => t.category === "pdf"),
     image: TOOLS.filter((t) => t.category === "image"),
     audio: TOOLS.filter((t) => t.category === "audio"),

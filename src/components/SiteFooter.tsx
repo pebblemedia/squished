@@ -37,6 +37,7 @@ export function SiteFooter() {
           <span>© {new Date().getFullYear()} Squished</span>
           <span>
             <Link to="/tools" className="hover:text-foreground">All tools</Link>
+            {" · "}<Link to="/limits" className="hover:text-foreground">Upload limits</Link>
             {" · "}Built with WebAssembly · Files never leave your device
           </span>
         </div>

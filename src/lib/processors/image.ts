@@ -2,7 +2,7 @@ import imageCompression from "browser-image-compression";
 import type { QueueItem, TargetFormat } from "../files";
 import { isHeic, replaceExt } from "../files";
 import { stripMetadata } from "../strip-metadata";
-import { encodeInWorker } from "./image-pool";
+import { encodeInWorker, type FitOptions } from "./image-pool";
 import type { EncodeTarget } from "./image-worker";
 
 const mimeFor: Record<EncodeTarget, string> = {
@@ -60,19 +60,42 @@ export async function compressImage(
       : (item.targetFormat as EncodeTarget);
 
   if (!target) return legacyCompress(item, source, item.targetFormat, onProgress);
+
+  const fit: FitOptions | undefined =
+    item.targetBytes || item.maxWidth || item.maxHeight
+      ? { fitBytes: item.targetBytes, maxWidth: item.maxWidth, maxHeight: item.maxHeight }
+      : undefined;
+  if (fit) {
+    // Already small enough and no size rules? Just clean it — no quality loss.
+    if (item.targetBytes && !item.maxWidth && !item.maxHeight && !heic && source.type === mimeFor[target]) {
+      const cleaned = await stripMetadata(source);
+      if (cleaned && cleaned.size <= item.targetBytes) return { blob: cleaned, name: item.name };
+    }
+    // PNG: colour reduction usually gets there without shrinking the image.
+    if (target === "png" && item.targetBytes && !item.maxWidth && !item.maxHeight) {
+      const reduced = await compressPng(item, source, (p) => onProgress(p * 0.5));
+      if (reduced.blob.size <= item.targetBytes) return reduced;
+    }
+    return encodeOrFallback(item, source, target, FIT_MAX_QUALITY, onProgress, fit);
+  }
+
   if (target === "png") return compressPng(item, source, onProgress);
   return encodeOrFallback(item, source, target, item.quality, onProgress);
 }
+
+/** Best quality "fit" mode will aim for; above this, files grow fast for no visible gain. */
+const FIT_MAX_QUALITY = 0.92;
 
 async function encodeOrFallback(
   item: QueueItem,
   source: File,
   target: EncodeTarget,
   quality: number,
-  onProgress: (p: number) => void
+  onProgress: (p: number) => void,
+  fit?: FitOptions
 ): Promise<{ blob: Blob; name: string }> {
   try {
-    const { buffer, resized } = await encodeInWorker(source, target, quality, onProgress);
+    const { buffer, resized } = await encodeInWorker(source, target, quality, onProgress, fit);
     let blob = new Blob([buffer], { type: mimeFor[target] });
     // Never hand back a bigger file when the format is unchanged — just clean the original.
     if (!resized && source.type === mimeFor[target] && blob.size >= source.size) {
@@ -114,8 +137,8 @@ async function legacyCompress(
   const targetMime = effective === "original" ? source.type : mimeFor[effective as EncodeTarget];
 
   const result = await imageCompression(source, {
-    maxSizeMB: 50,
-    maxWidthOrHeight: 4096,
+    maxSizeMB: item.targetBytes ? item.targetBytes / 1024 / 1024 : 50,
+    maxWidthOrHeight: Math.min(4096, item.maxWidth ?? Infinity, item.maxHeight ?? Infinity),
     useWebWorker: true,
     fileType: targetMime,
     initialQuality: item.quality,

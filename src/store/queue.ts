@@ -2,6 +2,8 @@ import { create } from "zustand";
 import type { QueueItem, TargetFormat } from "@/lib/files";
 import { detectKind } from "@/lib/files";
 import { photoDetailsPatch } from "@/lib/seo-fields";
+import type { FitChoice } from "@/lib/fit";
+import { fitFieldsFor } from "@/lib/fit";
 
 // Processors touch browser-only APIs (canvas, pdfjs worker, ffmpeg.wasm).
 // Import them lazily so SSG/SSR renders don't try to evaluate that code.
@@ -12,20 +14,22 @@ const loadPdf = () => import("@/lib/processors/pdf");
 
 interface QueueState {
   items: QueueItem[];
-  addFiles: (files: FileList | File[], defaults?: { targetFormat?: TargetFormat }) => void;
+  addFiles: (files: FileList | File[], defaults?: { targetFormat?: TargetFormat; fit?: FitChoice }) => void;
   remove: (id: string) => void;
   clear: () => void;
   updateOptions: (
     id: string,
-    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate" | "customName" | "meta" | "savedSeoId" | "savedSeoOwner" | "savedSeoRevision">>
+    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate" | "customName" | "meta" | "savedSeoId" | "savedSeoOwner" | "savedSeoRevision" | FitField>>
   ) => void;
   savePhotoDetails: (id: string, fields: unknown) => void;
   process: (id: string) => Promise<void>;
   processAll: () => Promise<void>;
   applyToAll: (
-    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate">>
+    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate">> & { fit?: FitChoice }
   ) => void;
 }
+
+type FitField = "targetBytes" | "maxWidth" | "maxHeight" | "fitLabel";
 
 const newId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -52,6 +56,7 @@ export const useQueue = create<QueueState>((set, get) => ({
         targetFormat,
         quality: 0.75,
         bitrate: kind === "audio" ? 128 : undefined,
+        ...(defaults?.fit ? fitFieldsFor(defaults.fit, kind) : {}),
       };
     });
     set({ items: [...get().items, ...newItems] });
@@ -167,7 +172,7 @@ export const useQueue = create<QueueState>((set, get) => ({
     }
   },
 
-  applyToAll: (patch) => {
+  applyToAll: ({ fit, ...patch }) => {
     set({
       items: get().items.map((x) => {
         // Only apply a targetFormat that the item's kind actually supports.
@@ -184,6 +189,7 @@ export const useQueue = create<QueueState>((set, get) => ({
         return {
           ...x,
           ...patch,
+          ...(fit ? fitFieldsFor(fit, x.kind) : {}),
           targetFormat,
         };
       }),

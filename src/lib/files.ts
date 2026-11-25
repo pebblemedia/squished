@@ -25,6 +25,12 @@ export interface QueueItem {
   targetFormat: TargetFormat;
   quality: number;
   bitrate?: number;
+  /** "Fit for" limit: output must be at or under this many bytes. */
+  targetBytes?: number;
+  maxWidth?: number;
+  maxHeight?: number;
+  /** Shown next to the limit, e.g. "Discord". */
+  fitLabel?: string;
   thumbnail?: string;
   customName?: string;
   meta?: import("./metadata").ImageMeta;

@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Tools from "./pages/Tools";
+import Limits from "./pages/Limits";
 import ToolPage from "./pages/ToolPage";
 import { TOOLS } from "./lib/tools";
 import { AccountProvider } from "./hooks/use-account";
@@ -38,6 +39,7 @@ export const routes: RouteRecord[] = [
     children: [
       { index: true, element: <Index /> },
       { path: "tools", element: <Tools /> },
+      { path: "limits", element: <Limits /> },
       { path: "login", element: <Login /> },
       { path: "auth/callback", element: <AuthCallback /> },
       { path: ".lovable/oauth/consent", element: <OAuthConsent /> },
