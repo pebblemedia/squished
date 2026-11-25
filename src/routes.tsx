@@ -9,17 +9,23 @@ import NotFound from "./pages/NotFound";
 import Tools from "./pages/Tools";
 import ToolPage from "./pages/ToolPage";
 import { TOOLS } from "./lib/tools";
+import { AccountProvider } from "./hooks/use-account";
+import Login from "./pages/Login";
+import AuthCallback from "./pages/AuthCallback";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
 function Layout() {
   return (
     <QueryClientProvider client={queryClient}>
+      <AccountProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <Outlet />
       </TooltipProvider>
+      </AccountProvider>
     </QueryClientProvider>
   );
 }
@@ -32,6 +38,9 @@ export const routes: RouteRecord[] = [
     children: [
       { index: true, element: <Index /> },
       { path: "tools", element: <Tools /> },
+      { path: "login", element: <Login /> },
+      { path: "auth/callback", element: <AuthCallback /> },
+      { path: ".lovable/oauth/consent", element: <OAuthConsent /> },
       {
         path: ":slug",
         element: <ToolPage />,

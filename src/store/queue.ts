@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { QueueItem, TargetFormat } from "@/lib/files";
 import { detectKind } from "@/lib/files";
+import { photoDetailsPatch } from "@/lib/seo-fields";
 
 // Processors touch browser-only APIs (canvas, pdfjs worker, ffmpeg.wasm).
 // Import them lazily so SSG/SSR renders don't try to evaluate that code.
@@ -16,8 +17,9 @@ interface QueueState {
   clear: () => void;
   updateOptions: (
     id: string,
-    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate" | "customName" | "meta">>
+    patch: Partial<Pick<QueueItem, "targetFormat" | "quality" | "bitrate" | "customName" | "meta" | "savedSeoId" | "savedSeoOwner" | "savedSeoRevision">>
   ) => void;
+  savePhotoDetails: (id: string, fields: unknown) => void;
   process: (id: string) => Promise<void>;
   processAll: () => Promise<void>;
   applyToAll: (
@@ -76,6 +78,14 @@ export const useQueue = create<QueueState>((set, get) => ({
     set({
       items: get().items.map((x) => (x.id === id ? { ...x, ...patch } : x)),
     });
+  },
+
+  savePhotoDetails: (id, fields) => {
+    const item = get().items.find((x) => x.id === id);
+    if (!item) throw new Error("The file is not in the current view.");
+    if (item.kind !== "image") throw new Error("Photo SEO fields are available for images only.");
+    const patch = photoDetailsPatch(item.name, item.meta, fields);
+    get().updateOptions(id, patch);
   },
 
   process: async (id) => {

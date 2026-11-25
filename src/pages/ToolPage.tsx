@@ -6,6 +6,7 @@ import { Download, Trash2 } from "lucide-react";
 import { DropZone } from "@/components/DropZone";
 import { FileRow } from "@/components/FileRow";
 import { BulkControls } from "@/components/BulkControls";
+import { QueueAgentTools } from "@/components/QueueAgentTools";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -105,7 +106,7 @@ const ToolPage = () => {
         <section className="pt-6 text-center sm:pt-10">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/5 px-3 py-1 text-xs font-medium text-foreground/70 ring-1 ring-foreground/10">
             <span className="size-1.5 rounded-full bg-primary" />
-            Nothing is uploaded
+            Original files stay on your device
           </span>
           <h1 className="mt-4 font-display text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
             {tool.h1}
@@ -155,6 +156,7 @@ const ToolPage = () => {
               </div>
             </div>
             <BulkControls />
+            <QueueAgentTools />
             <div className="mt-4 space-y-3">
               {items.map((it) => (
                 <FileRow key={it.id} id={it.id} />

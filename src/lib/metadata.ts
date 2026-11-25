@@ -57,9 +57,9 @@ const blobToBinary = async (blob: Blob) => {
 
 /** Embed EXIF metadata into a JPEG blob. Non-JPEG blobs are returned unchanged. */
 export async function embedMeta(blob: Blob, meta?: ImageMeta): Promise<Blob> {
-  if (!hasMeta(meta) || blob.type !== "image/jpeg") return blob;
+  if (!meta || !hasMeta(meta) || blob.type !== "image/jpeg") return blob;
   const piexif = (await import("piexifjs")).default;
-  const m = meta!;
+  const m = meta;
   const zeroth: Record<number, unknown> = {};
   const gps: Record<number, unknown> = {};
   const desc = [m.description, m.location].filter(Boolean).join(" — ");

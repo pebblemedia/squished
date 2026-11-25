@@ -5,6 +5,7 @@ import { Download, Trash2, ArrowRight } from "lucide-react";
 import { DropZone } from "@/components/DropZone";
 import { FileRow } from "@/components/FileRow";
 import { BulkControls } from "@/components/BulkControls";
+import { QueueAgentTools } from "@/components/QueueAgentTools";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -67,7 +68,7 @@ const Index = () => {
         <section className="pt-6 text-center sm:pt-12">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground/5 px-3 py-1 text-xs font-medium text-foreground/70 ring-1 ring-foreground/10">
             <span className="size-1.5 rounded-full bg-primary" />
-            Nothing is uploaded
+            Original files stay on your device
           </span>
           <h1 className="mt-4 font-display text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
             Compress and convert files <br className="hidden sm:block" />
@@ -76,7 +77,7 @@ const Index = () => {
             </span>
           </h1>
           <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground sm:text-base">
-            Drop images, audio, or video and shrink them on your device. No accounts, no uploads, no waiting.
+            Drop images, audio, or video and shrink them on your device. No account required for compression.
           </p>
         </section>
 
@@ -123,6 +124,7 @@ const Index = () => {
             </div>
 
             <BulkControls />
+            <QueueAgentTools />
 
             <div className="mt-4 space-y-3">
               {items.map((it) => (
@@ -156,9 +158,8 @@ const Index = () => {
         <section id="privacy" className="mt-16 rounded-2xl border bg-card p-6 sm:p-8">
           <h2 className="font-display text-xl font-semibold">Why in-browser?</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Squished runs entirely on your device using WebAssembly. Your files never touch
-            our servers — we couldn't see them if we tried. That means it's faster, free,
-            and private by default.
+            Compression and conversion run on your device. Your original files are never uploaded.
+            If you choose to connect Claude, only the SEO details you explicitly save are stored privately in your account.
           </p>
           <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-3">
             <li className="rounded-lg bg-muted/50 p-3">

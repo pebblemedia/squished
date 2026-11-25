@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import logoFull from "@/assets/squished-logo-full.svg";
 import logoIcon from "@/assets/squished-icon.svg";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useAccount } from "@/hooks/use-account";
+import { supabase } from "@/integrations/supabase/client";
+import { LogIn, LogOut } from "lucide-react";
 
 interface SiteHeaderProps {
   /** Logo shown at the top of the page. Defaults to the bundled Squished mark. */
@@ -13,6 +17,8 @@ interface SiteHeaderProps {
 
 export function SiteHeader({ logoFullSrc, logoShrunkSrc }: SiteHeaderProps = {}) {
   const [scrolled, setScrolled] = useState(false);
+  const { user, loading } = useAccount();
+  const [signoutError, setSignoutError] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -59,8 +65,9 @@ export function SiteHeader({ logoFullSrc, logoShrunkSrc }: SiteHeaderProps = {})
               scrolled ? "opacity-0" : "opacity-100"
             )}
           >
-            100% private · runs in your browser
+            Files stay in your browser
           </span>
+          {!loading && (user ? <Button variant="ghost" size="icon" aria-label="Sign out" title={signoutError ? "Couldn't sign out. Try again." : "Sign out"} onClick={() => void supabase.auth.signOut().then(({ error }) => setSignoutError(Boolean(error)), () => setSignoutError(true))}><LogOut className="size-4" /></Button> : <Button variant="outline" size="sm" asChild><Link to="/login?next=%2F"><LogIn className="size-4" />Sign in</Link></Button>)}
         </nav>
       </div>
     </header>

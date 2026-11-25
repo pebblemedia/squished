@@ -27,6 +27,9 @@ export interface QueueItem {
   thumbnail?: string;
   customName?: string;
   meta?: import("./metadata").ImageMeta;
+  savedSeoId?: string;
+  savedSeoOwner?: string;
+  savedSeoRevision?: number;
 }
 
 export const isImage = (file: File) => file.type.startsWith("image/");

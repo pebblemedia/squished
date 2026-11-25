@@ -37,6 +37,10 @@
     --input: 220 10% 88%;
     --ring: 84 81% 44%;
 
+    --google-background: 0 0% 100%;
+    --google-foreground: 0 0% 12.16%;
+    --google-border: 80 1.27% 46.27%;
+
     --radius: 0.75rem;
 
     --gradient-hero: radial-gradient(80% 60% at 50% 0%, hsl(84 90% 88% / 0.6), transparent 70%);
@@ -76,6 +80,9 @@
     --border: 220 12% 20%;
     --input: 220 12% 20%;
     --ring: 84 81% 50%;
+    --google-background: 240 2.56% 7.65%;
+    --google-foreground: 60 1.64% 89.8%;
+    --google-border: 80 1.45% 56.86%;
   }
 }
 

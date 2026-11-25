@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "sdk_version": "3.6.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://ykwymrwcrmnnphbcnceo.supabase.co/auth/v1",
+    "require_oauth_client_claim": true,
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "squished",
+      "version": "0.1.0",
+      "title": "Squished"
+    },
+    "tools": [
+      {
+        "name": "list_photo_seo",
+        "title": "List saved photo SEO details",
+        "description": "List only your explicitly saved photo SEO records; original photos and browser-only uploads are not accessible.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "description": "Pagination offset; begin with zero."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "description": "Maximum number of records to return, up to 100."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_photo_seo",
+        "title": "Read photo SEO fields",
+        "description": "Read every saved SEO field and current revision of a photo belonging to your account.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Photo SEO record ID from list_photo_seo."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_photo_seo",
+        "title": "Fill photo SEO fields",
+        "description": "Update a saved photo's filename and any SEO fields as the signed-in owner; omitted fields stay unchanged and empty text clears a field.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Photo SEO record ID from list_photo_seo."
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Latest revision from get_photo_seo; stale revisions are refused."
+            },
+            "customName": {
+              "type": "string",
+              "description": "Download filename without its extension; empty clears the custom name."
+            },
+            "title": {
+              "type": "string",
+              "description": "Photo title."
+            },
+            "description": {
+              "type": "string",
+              "description": "Photo description / alt text."
+            },
+            "keywords": {
+              "type": "string",
+              "description": "Comma-separated keywords."
+            },
+            "author": {
+              "type": "string",
+              "description": "Photo author."
+            },
+            "copyright": {
+              "type": "string",
+              "description": "Copyright statement."
+            },
+            "location": {
+              "type": "string",
+              "description": "Location name or street address."
+            },
+            "latitude": {
+              "type": "string",
+              "description": "Latitude as entered in the photo details form."
+            },
+            "longitude": {
+              "type": "string",
+              "description": "Longitude as entered in the photo details form."
+            }
+          },
+          "required": [
+            "id",
+            "revision"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

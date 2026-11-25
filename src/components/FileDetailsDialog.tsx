@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Loader2, MapPin, Pencil, Search } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Cloud, Loader2, MapPin, Pencil, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,16 +11,45 @@ import {
 import { useQueue } from "@/store/queue";
 import type { ImageMeta } from "@/lib/metadata";
 import { hasMeta } from "@/lib/metadata";
+import { useAccount } from "@/hooks/use-account";
+import { getSavedSeo, listSavedSeo, saveSeoForClaude } from "@/lib/saved-seo";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function FileDetailsDialog({ id }: { id: string }) {
   const item = useQueue((s) => s.items.find((x) => x.id === id));
   const update = useQueue((s) => s.updateOptions);
+  const savePhotoDetails = useQueue((s) => s.savePhotoDetails);
+  const { user } = useAccount();
+  const route = useLocation();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [meta, setMeta] = useState<ImageMeta>({});
   const [locating, setLocating] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geoStatus, setGeoStatus] = useState<string | null>(null);
+  const [savedRecords, setSavedRecords] = useState<Awaited<ReturnType<typeof listSavedSeo>>>([]);
+  const [cloudBusy, setCloudBusy] = useState(false);
+  const cloudPending = useRef(false);
+  const [cloudStatus, setCloudStatus] = useState("");
+  const [cloudError, setCloudError] = useState("");
+  const [recordsLoading, setRecordsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !item) return;
+    setName(item.customName ?? item.name.replace(/\.[^.]+$/, ""));
+    setMeta(item.meta ?? {});
+  }, [open, item?.meta, item?.customName]);
+
+  useEffect(() => {
+    let active = true;
+    setSavedRecords([]);
+    if (!open || !user || item?.kind !== "image") return;
+    setRecordsLoading(true);
+    listSavedSeo().then((rows) => { if (active) setSavedRecords(rows); }, (error) => {
+      if (active) setCloudError(error instanceof Error ? error.message : "Couldn't load saved details.");
+    }).finally(() => { if (active) setRecordsLoading(false); });
+    return () => { active = false; };
+  }, [open, user?.id, item?.kind]);
 
   if (!item) return null;
   const isImg = item.kind === "image";
@@ -30,6 +60,8 @@ export function FileDetailsDialog({ id }: { id: string }) {
     if (o) {
       setName(item.customName ?? baseName);
       setMeta(item.meta ?? {});
+      setCloudStatus("");
+      setCloudError("");
     }
     setOpen(o);
   };
@@ -82,11 +114,39 @@ export function FileDetailsDialog({ id }: { id: string }) {
   };
 
   const save = () => {
-    update(item.id, {
-      customName: name.trim() && name.trim() !== baseName ? name.trim() : undefined,
-      meta: isImg ? meta : undefined,
-    });
+    if (isImg) savePhotoDetails(item.id, { customName: name, ...meta });
+    else update(item.id, { customName: name.trim() && name.trim() !== baseName ? name.trim() : undefined });
     setOpen(false);
+  };
+
+  const saveForClaude = async () => {
+    if (cloudPending.current) return;
+    cloudPending.current = true; setCloudBusy(true); setCloudError(""); setCloudStatus("");
+    try {
+      savePhotoDetails(item.id, { customName: name, ...meta });
+      const current = useQueue.getState().items.find((file) => file.id === item.id);
+      if (!current) throw new Error("The photo is no longer in the queue.");
+      const saved = await saveSeoForClaude(current);
+      update(item.id, { savedSeoId: saved.id, savedSeoRevision: saved.revision, savedSeoOwner: saved.owner });
+      setCloudStatus("SEO details saved privately for Claude. The original photo was not uploaded.");
+      setSavedRecords(await listSavedSeo());
+    } catch (error) { setCloudError(error instanceof Error ? error.message : "Couldn't save these details."); }
+    finally { cloudPending.current = false; setCloudBusy(false); }
+  };
+
+  const loadSaved = async (recordId: string) => {
+    if (!user || cloudPending.current) return;
+    cloudPending.current = true; setCloudBusy(true); setCloudError(""); setCloudStatus("");
+    try {
+      const saved = await getSavedSeo(recordId);
+      const { data: { user: currentUser } } = await import("@/integrations/supabase/client").then(({ supabase }) => supabase.auth.getUser());
+      if (!currentUser || currentUser.id !== user.id) throw new Error("Your account changed. Please load the details again.");
+      // Loading a saved record replaces the current draft only on this explicit action.
+      update(item.id, { customName: saved.custom_name ?? undefined, meta: saved.meta, savedSeoId: saved.id, savedSeoRevision: saved.revision, savedSeoOwner: user.id });
+      setName(saved.custom_name ?? baseName); setMeta(saved.meta);
+      setCloudStatus("Latest saved details loaded and applied to this photo.");
+    } catch (error) { setCloudError(error instanceof Error ? error.message : "Couldn't load these details."); }
+    finally { cloudPending.current = false; setCloudBusy(false); }
   };
 
   const edited = !!item.customName || hasMeta(item.meta);
@@ -177,13 +237,30 @@ export function FileDetailsDialog({ id }: { id: string }) {
                   <MapPin className="size-4" />
                 </Button>
               </div>
+              <div className="space-y-3 border-t pt-4">
+                <p className="text-sm font-medium">Claude access</p>
+                <p className="text-xs text-muted-foreground">Only SEO details you choose to save are stored in your account. Original photos stay on your device.</p>
+                {user ? <>
+                  {savedRecords.length > 0 && <Select value={item.savedSeoOwner === user.id ? item.savedSeoId : undefined} onValueChange={(value) => void loadSaved(value)} disabled={cloudBusy}>
+                    <SelectTrigger aria-label="Saved SEO details"><SelectValue placeholder="Choose saved SEO details" /></SelectTrigger>
+                    <SelectContent>{savedRecords.map((record) => <SelectItem key={record.id} value={record.id}>{record.custom_name ?? record.original_name} · {record.id.slice(0, 8)}</SelectItem>)}</SelectContent>
+                  </Select>}
+                  {recordsLoading && <p role="status" className="text-xs text-muted-foreground">Loading saved details…</p>}
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" onClick={() => void saveForClaude()} disabled={cloudBusy}>{cloudBusy ? <Loader2 className="size-4 animate-spin" /> : <Cloud className="size-4" />}Save for Claude</Button>
+                    {item.savedSeoId && item.savedSeoOwner === user.id && <Button variant="outline" size="sm" onClick={() => void loadSaved(item.savedSeoId ?? "")} disabled={cloudBusy}><RefreshCw className="size-4" />Load latest details</Button>}
+                  </div>
+                </> : <Button variant="outline" size="sm" asChild><Link to={`/login?next=${encodeURIComponent(route.pathname + route.search)}`} onClick={() => setOpen(false)}><Cloud className="size-4" />Sign in for Claude</Link></Button>}
+                {cloudStatus && <p role="status" className="text-xs text-muted-foreground">{cloudStatus}</p>}
+                {cloudError && <p role="alert" className="text-xs text-destructive">{cloudError}</p>}
+              </div>
             </>
           )}
         </div>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={save}>Save</Button>
+          <Button onClick={save} disabled={cloudBusy}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
