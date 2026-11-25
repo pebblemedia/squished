@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Upload } from "lucide-react";
-import Lottie from "lottie-react";
+import { useLottie } from "lottie-react";
 import { cn } from "@/lib/utils";
 import { useQueue } from "@/store/queue";
 import rocketAnimation from "@/assets/file-upload-rocket.json";
@@ -42,6 +42,11 @@ function recolorLottie(data: unknown, color: [number, number, number]): unknown 
 
 // Brand primary lime: hsl(84 81% 44%) ≈ rgb(149, 203, 20)
 const BRAND_RGB: [number, number, number] = [149 / 255, 203 / 255, 20 / 255];
+
+function ProcessingAnimation() {
+  const { View } = useLottie({ animationData: rocketAnimation, loop: true, autoplay: true });
+  return View;
+}
 
 export function DropZone({ onFiles, accept, hint, title }: DropZoneProps) {
   const [over, setOver] = useState(false);
@@ -94,7 +99,7 @@ export function DropZone({ onFiles, accept, hint, title }: DropZoneProps) {
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-card/85 backdrop-blur-sm animate-fade-in">
           <div className="flex flex-col items-center">
             <div className="size-48 sm:size-56">
-              <Lottie animationData={recolored} loop autoplay />
+              <ProcessingAnimation />
             </div>
             <p className="mt-2 text-sm font-medium text-foreground">
               Squishing your files…

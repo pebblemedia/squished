@@ -14,6 +14,7 @@ import { hasMeta } from "@/lib/metadata";
 import { useAccount } from "@/hooks/use-account";
 import { getSavedSeo, listSavedSeo, saveSeoForClaude } from "@/lib/saved-seo";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 export function FileDetailsDialog({ id }: { id: string }) {
   const item = useQueue((s) => s.items.find((x) => x.id === id));
@@ -43,6 +44,9 @@ export function FileDetailsDialog({ id }: { id: string }) {
   useEffect(() => {
     let active = true;
     setSavedRecords([]);
+    setCloudStatus("");
+    setCloudError("");
+    setRecordsLoading(false);
     if (!open || !user || item?.kind !== "image") return;
     setRecordsLoading(true);
     listSavedSeo().then((rows) => { if (active) setSavedRecords(rows); }, (error) => {
@@ -139,7 +143,7 @@ export function FileDetailsDialog({ id }: { id: string }) {
     cloudPending.current = true; setCloudBusy(true); setCloudError(""); setCloudStatus("");
     try {
       const saved = await getSavedSeo(recordId);
-      const { data: { user: currentUser } } = await import("@/integrations/supabase/client").then(({ supabase }) => supabase.auth.getUser());
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!currentUser || currentUser.id !== user.id) throw new Error("Your account changed. Please load the details again.");
       // Loading a saved record replaces the current draft only on this explicit action.
       update(item.id, { customName: saved.custom_name ?? undefined, meta: saved.meta, savedSeoId: saved.id, savedSeoRevision: saved.revision, savedSeoOwner: user.id });

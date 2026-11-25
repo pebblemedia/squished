@@ -29,7 +29,7 @@ export default function OAuthConsent() {
       try {
         const { data, error } = await oauthClient.getAuthorizationDetails(id);
         if (!active) return;
-        if (error) throw new Error("This connection request has expired or is invalid. Start a new connection in Claude.");
+        if (error) throw new Error("Couldn't load this connection request. It may have expired, or the connection service may be unavailable. Start a new connection in Claude.");
         if (!data) throw new Error("Couldn't load this connection request. Try starting it again.");
         const redirect = data.redirect_url ?? data.redirect_to;
         if (redirect && !data.client) { window.location.assign(redirect); return; }
@@ -71,7 +71,7 @@ export default function OAuthConsent() {
       <Button disabled={busy} onClick={() => void decide(true)}>{busy ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}Approve connection</Button>
       <Button variant="outline" disabled={busy} onClick={() => void decide(false)}><X className="size-4" />Cancel connection</Button>
     </div>}
-    {user && <Button variant="link" className="mt-5 h-auto px-0" disabled={busy} onClick={() => void supabase.auth.signOut().catch(() => setError("Couldn't sign out. Please try again."))}>Use a different account</Button>}
+    {user && <Button variant="link" className="mt-5 h-auto px-0" disabled={busy} onClick={() => void supabase.auth.signOut().then(({ error }) => { if (error) setError("Couldn't sign out. Please try again."); }, () => setError("Couldn't sign out. Please try again."))}>Use a different account</Button>}
     {!details && error && <Button variant="outline" asChild className="mt-5"><Link to="/">Back to Squished</Link></Button>}
   </main></div>;
 }
