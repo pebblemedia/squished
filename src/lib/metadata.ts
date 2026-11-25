@@ -21,7 +21,7 @@ export function finalName(item: QueueItem): string {
   const custom = item.customName?.trim();
   if (!custom) return out;
   const dot = out.lastIndexOf(".");
-  const ext = dot === -1 ? "" : out.slice(dot);
+  const ext = dot === -1 ? "" : out.slice(dot).toLowerCase();
   const safe = custom.replace(/[\\/:*?"<>|]+/g, "-").replace(/\.[a-z0-9]{2,5}$/i, "");
   return `${safe}${ext}`;
 }
@@ -36,6 +36,10 @@ const ucs2 = (s: string) => {
   out.push(0, 0);
   return out;
 };
+
+// EXIF ASCII tags are single-byte: swap typographic punctuation, drop anything outside Latin-1.
+const ascii = (s: string) =>
+  s.replace(/[\u2013\u2014]/g, "-").replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[^\x20-\xFF]/g, "");
 
 const toDms = (deg: number): [number, number][] => {
   const a = Math.abs(deg);
@@ -62,19 +66,19 @@ export async function embedMeta(blob: Blob, meta?: ImageMeta): Promise<Blob> {
   const m = meta;
   const zeroth: Record<number, unknown> = {};
   const gps: Record<number, unknown> = {};
-  const desc = [m.description, m.location].filter(Boolean).join(" — ");
+  const desc = [m.description, m.location].filter(Boolean).join(" - ");
   if (m.title) zeroth[piexif.ImageIFD.XPTitle] = ucs2(m.title);
   if (desc) {
-    zeroth[piexif.ImageIFD.ImageDescription] = desc;
+    zeroth[piexif.ImageIFD.ImageDescription] = ascii(desc);
     zeroth[piexif.ImageIFD.XPSubject] = ucs2(desc);
   }
   if (m.location) zeroth[piexif.ImageIFD.XPComment] = ucs2(m.location);
   if (m.keywords) zeroth[piexif.ImageIFD.XPKeywords] = ucs2(m.keywords);
   if (m.author) {
-    zeroth[piexif.ImageIFD.Artist] = m.author;
+    zeroth[piexif.ImageIFD.Artist] = ascii(m.author);
     zeroth[piexif.ImageIFD.XPAuthor] = ucs2(m.author);
   }
-  if (m.copyright) zeroth[piexif.ImageIFD.Copyright] = m.copyright;
+  if (m.copyright) zeroth[piexif.ImageIFD.Copyright] = ascii(m.copyright);
   const lat = parseFloat(m.latitude ?? "");
   const lon = parseFloat(m.longitude ?? "");
   if (!isNaN(lat) && !isNaN(lon)) {

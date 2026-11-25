@@ -35,3 +35,13 @@ export function photoDetailsPatch(originalName: string, current: ImageMeta | und
 }
 
 export const photoSeoColumns = "id,original_name,custom_name,metadata,revision,updated_at" as const;
+/** Lowercase, dash-separated, filesystem-safe name for SEO filenames ("Joe's Plumbing — Boise" → "joes-plumbing-boise"). */
+export function slugify(text: string, max = 80): string {
+  const slug = text
+    .normalize("NFKD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase().replace(/&/g, " and ").replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  if (slug.length <= max) return slug;
+  const cut = slug.slice(0, max);
+  return cut.slice(0, cut.lastIndexOf("-") > 20 ? cut.lastIndexOf("-") : max);
+}

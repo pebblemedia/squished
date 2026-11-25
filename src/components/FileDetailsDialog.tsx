@@ -15,6 +15,7 @@ import { useAccount } from "@/hooks/use-account";
 import { getSavedSeo, listSavedSeo, saveSeoForClaude } from "@/lib/saved-seo";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { geocode } from "@/features/local-seo/api/geocode";
 
 export function FileDetailsDialog({ id }: { id: string }) {
   const item = useQueue((s) => s.items.find((x) => x.id === id));
@@ -95,21 +96,13 @@ export function FileDetailsDialog({ id }: { id: string }) {
     setGeocoding(true);
     setGeoStatus(null);
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(q)}`
-      );
-      if (!res.ok) throw new Error(`status ${res.status}`);
-      const rows = (await res.json()) as Array<{ lat: string; lon: string; display_name: string }>;
-      if (!rows.length) {
+      const hit = await geocode(q);
+      if (!hit) {
         setGeoStatus("No match found for that address — try adding a city or country.");
         return;
       }
-      setMeta((m) => ({
-        ...m,
-        latitude: parseFloat(rows[0].lat).toFixed(6),
-        longitude: parseFloat(rows[0].lon).toFixed(6),
-      }));
-      setGeoStatus(`Found: ${rows[0].display_name}`);
+      setMeta((m) => ({ ...m, latitude: hit.latitude, longitude: hit.longitude }));
+      setGeoStatus(`Found: ${hit.label}`);
     } catch {
       setGeoStatus("Couldn't reach the address lookup. Check your connection and try again.");
     } finally {
