@@ -9,6 +9,7 @@ import { BulkControls } from "@/components/BulkControls";
 import { ShareReceipt } from "@/components/ShareReceipt";
 import { LocalSeoDialog } from "@/features/local-seo/components/local-seo-dialog";
 import { QueueAgentTools } from "@/components/QueueAgentTools";
+import { QueueFileTools } from "@/features/agent-tools/components/queue-file-tools";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -161,6 +162,7 @@ const ToolPage = () => {
             </div>
             <BulkControls />
             <QueueAgentTools />
+            <QueueFileTools />
             <div className="mt-4 space-y-3">
               {items.map((it) => (
                 <FileRow key={it.id} id={it.id} />

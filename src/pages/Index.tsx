@@ -8,7 +8,9 @@ import { BulkControls } from "@/components/BulkControls";
 import { ShareReceipt } from "@/components/ShareReceipt";
 import { LocalSeoDialog } from "@/features/local-seo/components/local-seo-dialog";
 import { RecipeBar } from "@/features/recipes/components/recipe-bar";
+import { useIncomingFiles } from "@/features/incoming/hooks/use-incoming-files";
 import { QueueAgentTools } from "@/components/QueueAgentTools";
+import { QueueFileTools } from "@/features/agent-tools/components/queue-file-tools";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -21,6 +23,7 @@ const Index = () => {
   const items = useQueue((s) => s.items);
   const addFiles = useQueue((s) => s.addFiles);
   const clear = useQueue((s) => s.clear);
+  useIncomingFiles(addFiles);
 
   const totalIn = items.reduce((sum, i) => sum + i.originalSize, 0);
   const totalOut = items.reduce((sum, i) => sum + (i.outputSize ?? 0), 0);
@@ -131,6 +134,7 @@ const Index = () => {
 
             <BulkControls />
             <QueueAgentTools />
+            <QueueFileTools />
 
             <div className="mt-4 space-y-3">
               {items.map((it) => (
