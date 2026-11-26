@@ -1,0 +1,37 @@
+.squished-notice {
+	position: fixed;
+	right: 16px;
+	bottom: 16px;
+	z-index: 1000000;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	max-width: calc(100vw - 32px);
+	padding: 10px 12px 10px 16px;
+	border-left: 4px solid #00a32a;
+	border-radius: 2px;
+	background: #fff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	color: #1d2327;
+	font-size: 13px;
+	line-height: 1.4;
+}
+
+.squished-notice[hidden] {
+	display: none;
+}
+
+.squished-notice__close {
+	border: 0;
+	background: none;
+	color: #50575e;
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 2px 4px;
+}
+
+.squished-notice__close:hover,
+.squished-notice__close:focus {
+	color: #1d2327;
+}
