@@ -1,0 +1,52 @@
+{
+  "name": "squished",
+  "version": "0.1.0",
+  "description": "Compress images on your machine: JPEG, PNG, WebP, AVIF. Fit to a size or upload limit. Nothing is uploaded.",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://squished.app",
+  "keywords": [
+    "image",
+    "compress",
+    "jpeg",
+    "png",
+    "webp",
+    "avif",
+    "mcp",
+    "cli"
+  ],
+  "bin": {
+    "squished": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types/packages/cli/src/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs && tsc -p .",
+    "typecheck": "tsc -p . --noEmit false",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@jsquash/avif": "^2.1.1",
+    "@jsquash/jpeg": "^1.6.0",
+    "@jsquash/oxipng": "^2.3.0",
+    "@jsquash/png": "^3.1.1",
+    "@jsquash/resize": "^2.1.1",
+    "@jsquash/webp": "^1.5.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@types/node": "^18.19.130",
+    "esbuild": "^0.28.2",
+    "tinyglobby": "^0.2.17",
+    "typescript": "^5.9.3",
+    "zod": "^4.6.7"
+  }
+}
