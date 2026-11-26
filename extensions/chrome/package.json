@@ -1,0 +1,20 @@
+{
+  "name": "squished-chrome-extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:dev": "node scripts/build.mjs --dev",
+    "zip": "node scripts/build.mjs && node scripts/zip.mjs",
+    "test": "node scripts/build.mjs && node --test test/unit.test.mjs",
+    "test:e2e": "node scripts/build.mjs --test && node test/e2e.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "fflate": "^0.8.3",
+    "jsdom": "^29.1.1",
+    "puppeteer": "^25.19.0",
+    "sharp": "^0.35.5"
+  }
+}
