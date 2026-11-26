@@ -39,6 +39,17 @@ export interface QueueItem {
   savedSeoRevision?: number;
 }
 
+const FORMATS_BY_KIND: Record<FileKind, TargetFormat[]> = {
+  image: ["original", "jpeg", "png", "webp", "avif", "strip", "pdf"],
+  audio: ["original", "mp3", "m4a", "ogg", "wav"],
+  video: ["original", "mp4", "webm"],
+  pdf: ["pdf", "pdf-to-jpg", "pdf-to-png"],
+  other: [],
+};
+
+/** Whether a file of this kind can be turned into this target format. */
+export const formatAllowed = (kind: FileKind, f: TargetFormat) => FORMATS_BY_KIND[kind].includes(f);
+
 export const isImage = (file: File) => file.type.startsWith("image/");
 
 export function detectKind(file: File): FileKind {

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { QueueItem, TargetFormat } from "@/lib/files";
-import { detectKind } from "@/lib/files";
+import { detectKind, formatAllowed } from "@/lib/files";
 import { photoDetailsPatch } from "@/lib/seo-fields";
 import type { FitChoice } from "@/lib/fit";
 import { fitFieldsFor } from "@/lib/fit";
@@ -198,15 +198,7 @@ export const useQueue = create<QueueState>((set, get) => ({
       items: get().items.map((x) => {
         // Only apply a targetFormat that the item's kind actually supports.
         let targetFormat = x.targetFormat;
-        if (patch.targetFormat) {
-          const f = patch.targetFormat;
-          const ok =
-            (x.kind === "image" && ["original", "jpeg", "png", "webp", "avif", "strip", "pdf"].includes(f)) ||
-            (x.kind === "audio" && ["original", "mp3", "m4a", "ogg", "wav"].includes(f)) ||
-            (x.kind === "video" && ["original", "mp4", "webm"].includes(f)) ||
-            (x.kind === "pdf" && ["pdf", "pdf-to-jpg", "pdf-to-png"].includes(f));
-          if (ok) targetFormat = f;
-        }
+        if (patch.targetFormat && formatAllowed(x.kind, patch.targetFormat)) targetFormat = patch.targetFormat;
         return {
           ...x,
           ...patch,
