@@ -4,6 +4,8 @@ import { detectKind } from "@/lib/files";
 import { photoDetailsPatch } from "@/lib/seo-fields";
 import type { FitChoice } from "@/lib/fit";
 import { fitFieldsFor } from "@/lib/fit";
+import { recipeBusiness, recipeDefaults, type Recipe } from "@/features/recipes/api/recipe";
+import { buildPhotoSeo, DEFAULT_PATTERN } from "@/features/local-seo/api/seo-template";
 
 // Processors touch browser-only APIs (canvas, pdfjs worker, ffmpeg.wasm).
 // Import them lazily so SSG/SSR renders don't try to evaluate that code.
@@ -14,6 +16,9 @@ const loadPdf = () => import("@/lib/processors/pdf");
 
 interface QueueState {
   items: QueueItem[];
+  /** Active recipe: settings new files get on the home queue (tool pages pass their own defaults). */
+  recipe: Recipe | null;
+  setRecipe: (r: Recipe | null) => void;
   addFiles: (files: FileList | File[], defaults?: { targetFormat?: TargetFormat; fit?: FitChoice }) => void;
   remove: (id: string) => void;
   clear: () => void;
@@ -38,8 +43,11 @@ const newId = () =>
 
 export const useQueue = create<QueueState>((set, get) => ({
   items: [],
+  recipe: null,
+  setRecipe: (recipe) => set({ recipe }),
 
   addFiles: (files, defaults) => {
+    const recipe = defaults ? null : get().recipe;
     const list = Array.from(files);
     const newItems: QueueItem[] = list.map((file) => {
       const kind = detectKind(file);
@@ -57,9 +65,22 @@ export const useQueue = create<QueueState>((set, get) => ({
         quality: 0.75,
         bitrate: kind === "audio" ? 128 : undefined,
         ...(defaults?.fit ? fitFieldsFor(defaults.fit, kind) : {}),
+        ...(recipe ? recipeDefaults(recipe, kind) : {}),
       };
     });
     set({ items: [...get().items, ...newItems] });
+
+    if (recipe?.seo) {
+      const images = get().items.filter((x) => x.kind === "image");
+      for (const it of newItems) {
+        if (it.kind !== "image") continue;
+        const index = images.findIndex((x) => x.id === it.id);
+        get().savePhotoDetails(it.id, buildPhotoSeo(
+          recipeBusiness(recipe.seo.profile),
+          { index, total: images.length, originalName: it.name, pattern: recipe.seo.pattern || DEFAULT_PATTERN }
+        ));
+      }
+    }
 
     newItems.forEach(async (it) => {
       if (it.kind !== "image") return;

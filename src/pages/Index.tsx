@@ -6,6 +6,8 @@ import { DropZone } from "@/components/DropZone";
 import { FileRow } from "@/components/FileRow";
 import { BulkControls } from "@/components/BulkControls";
 import { ShareReceipt } from "@/components/ShareReceipt";
+import { LocalSeoDialog } from "@/features/local-seo/components/local-seo-dialog";
+import { RecipeBar } from "@/features/recipes/components/recipe-bar";
 import { QueueAgentTools } from "@/components/QueueAgentTools";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -83,12 +85,13 @@ const Index = () => {
         </section>
 
         <section className="mt-8">
+          <RecipeBar />
           <DropZone onFiles={addFiles} />
         </section>
 
         {items.length > 0 && (
           <section className="mt-8">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="text-sm">
                 <span className="font-medium">{items.length}</span>{" "}
                 <span className="text-muted-foreground">
@@ -105,7 +108,8 @@ const Index = () => {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <LocalSeoDialog />
                 <ShareReceipt />
                 <Button
                   variant="ghost"
