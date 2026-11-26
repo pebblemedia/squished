@@ -1,3 +1,4 @@
+import { emitLocalChange } from "@/features/account-sync/api/local-change";
 import { recipeSchema, type Recipe, type RecipeData } from "./recipe";
 
 const KEY = "squished:recipes";
@@ -20,20 +21,23 @@ export function loadRecipes(): Recipe[] {
   }
 }
 
-function write(list: Recipe[]) {
-  try { localStorage.setItem(KEY, JSON.stringify(list)); } catch { /* storage blocked: recipe still works this session */ }
+/** Replace the local list (used when pulling from the account); doesn't notify sync. */
+export function writeRecipes(list: Recipe[]) {
+  try { localStorage.setItem(KEY, JSON.stringify(list.slice(0, 50))); } catch { /* storage blocked: recipe still works this session */ }
 }
 
 export function saveRecipe(data: RecipeData, id = newId()): { list: Recipe[]; recipe: Recipe } {
   const recipe: Recipe = { ...recipeData(data), id };
   const list = [recipe, ...loadRecipes().filter((r) => r.id !== id)].slice(0, 50);
-  write(list);
+  writeRecipes(list);
+  emitLocalChange({ collection: "recipes", op: "save", id, name: recipe.name, data: recipeData(recipe) });
   return { list, recipe };
 }
 
 export function deleteRecipe(id: string): Recipe[] {
   const list = loadRecipes().filter((r) => r.id !== id);
-  write(list);
+  writeRecipes(list);
+  emitLocalChange({ collection: "recipes", op: "delete", id });
   return list;
 }
 

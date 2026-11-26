@@ -9,6 +9,8 @@ import { useQueue } from "@/store/queue";
 import { describeRecipe, SPEC_PACKS, type Recipe, type RecipeData } from "../api/recipe";
 import { deleteRecipe, loadRecipes, recipeFromHash, recipeLink, saveRecipe } from "../api/recipe-storage";
 import { RecipeDialog } from "./recipe-dialog";
+import { SyncNote } from "@/features/account-sync/components/sync-note";
+import { onSynced } from "@/features/account-sync/api/local-change";
 
 /** Pick a recipe (spec pack or your own) so every dropped file gets its settings. */
 export function RecipeBar() {
@@ -18,6 +20,8 @@ export function RecipeBar() {
   const [editing, setEditing] = useState<Recipe | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [fromLink, setFromLink] = useState(false);
+
+  useEffect(() => onSynced(() => setMine(loadRecipes())), []);
 
   useEffect(() => {
     setMine(loadRecipes());
@@ -113,6 +117,7 @@ export function RecipeBar() {
           )}
         </p>
       )}
+      <SyncNote />
       <RecipeDialog open={dialogOpen} onOpenChange={setDialogOpen} initial={editing} onSave={onSave} />
     </div>
   );

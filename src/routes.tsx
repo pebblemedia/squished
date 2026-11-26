@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { registerServiceWorker } from "./features/incoming/api/shared-files";
+import { AccountSyncBridge } from "./features/account-sync/components/account-sync-bridge";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +25,7 @@ function Layout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AccountProvider>
+      <AccountSyncBridge />
       <TooltipProvider>
         <Toaster />
         <Sonner />
