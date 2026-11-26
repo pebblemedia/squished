@@ -1,0 +1,4 @@
+# Built by `npm run build` from squished/src
+squished/assets/*.js
+squished/assets/wasm/
+squished/assets/licenses/
